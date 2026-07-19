@@ -6,7 +6,13 @@ const TG_API = "https://api.telegram.org/bot";
 async function sendTelegramMessage(token, chatId, text, extra) {
   const body = { chat_id: chatId, text };
   if (extra && extra.markdown) body.parse_mode = "Markdown";
-  if (extra && extra.keyboard) {
+  if (extra && extra.inline) {
+    body.reply_markup = {
+      inline_keyboard: extra.inline.map((row) =>
+        row.map((b) => ({ text: b.text, callback_data: b.data }))
+      )
+    };
+  } else if (extra && extra.keyboard) {
     body.reply_markup = {
       keyboard: extra.keyboard.map((t) => [{ text: t }]),
       one_time_keyboard: true,
@@ -51,9 +57,10 @@ Deno.serve(async (req) => {
     const { telegram_bot_token: token, app_url: appUrl } = setting;
 
     const message = body.message;
-    if (!message) return Response.json({ status: "ok" });
+    const callback = body.callback_query;
+    if (!message && !callback) return Response.json({ status: "ok" });
 
-    const chatId = String(message.chat?.id);
+    const chatId = String((message?.chat || callback.message?.chat)?.id);
 
     let sessions = await base44.asServiceRole.entities.TelegramSession.filter({ chat_id: chatId });
     let session = sessions[0];
@@ -68,7 +75,14 @@ Deno.serve(async (req) => {
 
     const sendMessage = (text, extra) => sendTelegramMessage(token, chatId, text, extra);
 
-    if (message.text) {
+    if (callback) {
+      await fetch(`${TG_API}${token}/answerCallbackQuery`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callback_query_id: callback.id })
+      });
+      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl);
+    } else if (message.text) {
       await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl);
     } else if (message.photo) {
       const photos = message.photo;

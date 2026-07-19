@@ -130,9 +130,17 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_route"
   });
-  await sendMessage("🛣️ What is the route?\n1. Madinah → Makkah\n2. Makkah → Madinah\n\nReply with 1 or 2.", {
-    keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
-  });
+  await sendMessage(
+    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n\nTap a button or reply with 1 or 2.`,
+    {
+      markdown: true,
+      inline: [
+        [{ text: "🕌 Madinah  →  🕋 Makkah", data: "1" }],
+        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }]
+      ],
+      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
+    }
+  );
 }
 
 async function handleRouteSelection(base44, sessionEntityName, session, text, sendMessage) {
@@ -153,7 +161,10 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
     route_from: routeFrom,
     route_to: routeTo
   });
-  await sendMessage(`✅ Route: ${routeFrom} → ${routeTo}\n\n📅 What is the travel date and time?\n\nPlease send like: 2024-01-15 7:05 PM`);
+  await sendMessage(
+    `✅ Route: *${routeFrom} → ${routeTo}*\n\n📅 *Step 2 of 4 — Date & Time*\n\nSend the travel date and time, for example:\n\`2024-01-15 7:05 PM\``,
+    { markdown: true }
+  );
 }
 
 async function handleDateTime(base44, sessionEntityName, session, rawText, sendMessage) {
@@ -189,7 +200,11 @@ async function askCompany(base44, sessionEntityName, session, sendMessage) {
     state: "awaiting_company",
     company_menu: companies.map((c) => c.id)
   });
-  await sendMessage(`🏢 Select the company:\n\n${menu.join("\n")}\n\nReply with a number.`, { keyboard: menu });
+  await sendMessage(`🏢 *Step 3 of 4 — Company*\n\n${menu.join("\n")}\n\nTap a button or reply with a number.`, {
+    markdown: true,
+    inline: companies.map((c, i) => [{ text: `🏢 ${c.name}`, data: String(i + 1) }]),
+    keyboard: menu
+  });
 }
 
 async function handleCompanySelection(base44, sessionEntityName, session, text, sendMessage) {
@@ -256,7 +271,12 @@ async function askDriver(base44, sessionEntityName, session, sendMessage) {
     state: "awaiting_driver",
     driver_menu: drivers
   });
-  await sendMessage(`🚗 Select the driver:\n\n${menu.join("\n")}\n\nReply with a number, or send "skip" for no driver.`, {
+  await sendMessage(`🚗 *Step 4 of 4 — Driver*\n\n${menu.join("\n")}\n\nTap a button or reply with a number. Send "skip" for no driver.`, {
+    markdown: true,
+    inline: [
+      ...drivers.map((d, i) => [{ text: `🚗 ${d.name}${d.name2 ? ` & ${d.name2}` : ""}${d.vehicle_plate ? ` — ${d.vehicle_plate}` : ""}`, data: String(i + 1) }]),
+      [{ text: "⏭️ Skip — no driver", data: "skip" }]
+    ],
     keyboard: [...drivers.map((d, i) => `${i + 1}. ${d.name}${d.name2 ? ` & ${d.name2}` : ""}`), "skip"]
   });
 }
