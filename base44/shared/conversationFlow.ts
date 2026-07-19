@@ -83,7 +83,16 @@ async function processPhoto(base44, sessionEntityName, session, photoDownloader,
   try {
     const { buffer, filename } = await photoDownloader();
     const fileUrl = await uploadImageBuffer(base44, buffer, filename);
-    const passenger = await processPassengerPhoto(base44, fileUrl);
+    let passenger = await processPassengerPhoto(base44, fileUrl);
+
+    // Retry once if the reading came back blank
+    if (!passenger.name && !passenger.id_number) {
+      passenger = await processPassengerPhoto(base44, fileUrl);
+    }
+    if (!passenger.name && !passenger.id_number) {
+      await sendMessage("⚠️ I couldn't read any details from this photo. Please send a clearer photo of the ID.");
+      return;
+    }
 
     const updatedPassengers = [...(session.passengers || []), passenger];
     const updatedPhotos = [...(session.photo_urls || []), fileUrl];
