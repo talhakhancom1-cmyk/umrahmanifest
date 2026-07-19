@@ -75,11 +75,11 @@ export default function ContractPage({ trip }) {
         <table style={{ width: "60%", borderCollapse: "collapse", margin: "8px auto" }}>
           <tbody>
             <tr>
-              <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, background: "#f5f5f5", width: "35%" }}>النقل من:</td>
+              <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, background: "#cfe2f3", width: "35%" }}>النقل من:</td>
               <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, textAlign: "center", fontSize: "13pt" }}>{from}</td>
             </tr>
             <tr>
-              <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, background: "#f5f5f5" }}>وصولا الى:</td>
+              <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, background: "#cfe2f3" }}>وصولا الى:</td>
               <td style={{ border: "1.5px solid #333", padding: "5px 10px", fontWeight: 700, textAlign: "center", fontSize: "13pt" }}>{to}</td>
             </tr>
           </tbody>

@@ -24,7 +24,7 @@ export default function ManifestPage({ trip }) {
     fontWeight: 700, fontSize: "10pt"
   };
   const thDark = {
-    border: "1px solid #555", background: "#222", color: "#fff",
+    border: "1px solid #555", background: "#1a3a5c", color: "#fff",
     fontWeight: 700, textAlign: "center", padding: "5px 6px", fontSize: "10pt"
   };
   const thDarkAr = {
@@ -47,7 +47,7 @@ export default function ManifestPage({ trip }) {
           </tr>
           <tr>
             <td style={{
-              fontWeight: 700, background: "#222", color: "#fff",
+              fontWeight: 700, background: "#1a3a5c", color: "#fff",
               border: "1px solid #333", padding: "4px 8px"
             }}>DESTINATION:</td>
             <td style={{
@@ -112,7 +112,7 @@ export default function ManifestPage({ trip }) {
               <td style={tdC}>{p.nationality || ""}</td>
               <td style={tdC}>{p.id_number || ""}</td>
               <td style={tdC}>{p.name || ""}</td>
-              <td style={{ ...tdC, background: "#222", color: "#fff", fontWeight: 900 }}>
+              <td style={{ ...tdC, background: "#1a3a5c", color: "#fff", fontWeight: 900 }}>
                 {i === 12 ? ".13" : i + 1}
               </td>
             </tr>
