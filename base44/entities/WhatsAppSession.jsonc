@@ -9,15 +9,12 @@
       "type": "string",
       "enum": [
         "idle",
-        "awaiting_company",
-        "awaiting_route",
         "collecting",
+        "awaiting_route",
+        "awaiting_datetime",
         "done"
       ],
       "default": "idle"
-    },
-    "company_template_id": {
-      "type": "string"
     },
     "route_from": {
       "type": "string",
@@ -32,6 +29,13 @@
         "Madina",
         "Makkah"
       ]
+    },
+    "travel_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "trip_time": {
+      "type": "string"
     },
     "passengers": {
       "type": "array",
