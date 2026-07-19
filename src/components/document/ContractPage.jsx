@@ -1,6 +1,7 @@
 import React from "react";
 import DocumentHeader from "./DocumentHeader";
 import PageFooter from "./PageFooter";
+import CompanyStamp from "./CompanyStamp";
 import { pageStyle } from "./styles";
 import { formatTripDate } from "@/lib/dateFormat";
 
@@ -16,16 +17,12 @@ export default function ContractPage({ trip }) {
 
       {/* QR code top-left (visually right in RTL) */}
       <div style={{ display: "flex", gap: "16px", marginBottom: "10px", alignItems: "flex-start" }}>
-        <div style={{ minWidth: "90px" }}>
-          {trip.qr_url ? (
-            <img src={trip.qr_url} style={{ width: "90px", height: "90px" }} />
-          ) : (
-            <div style={{
-              width: "90px", height: "90px", border: "1px solid #999",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "8pt", color: "#999"
-            }}>QR Code</div>
-          )}
+        <div style={{ minWidth: "130px" }}>
+          <img
+            src={trip.qr_url || "https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=MURJAN-AL-SHARQIYA-CR2055010235&color=000000&bgcolor=FFFFFF&margin=0&qzone=0"}
+            style={{ width: "130px", height: "130px" }}
+            alt="QR Code"
+          />
         </div>
         <div style={{ flex: 1, textAlign: "center", paddingTop: "8px" }}>
           <div style={{ fontWeight: 800, fontSize: "15pt", textDecoration: "underline" }}>
@@ -103,16 +100,12 @@ export default function ContractPage({ trip }) {
         </p>
       </div>
 
-      {/* Stamp bottom left */}
-      <div style={{ position: "absolute", bottom: "28mm", left: "12mm" }}>
+      {/* Company stamp - bottom left near signature */}
+      <div style={{ position: "absolute", bottom: "26mm", left: "12mm" }}>
         {trip.stamp_url ? (
-          <img src={trip.stamp_url} style={{ width: "90px", height: "90px", objectFit: "contain" }} />
+          <img src={trip.stamp_url} style={{ width: "110px", height: "110px", objectFit: "contain" }} />
         ) : (
-          <div style={{
-            width: "85px", height: "85px", border: "1px dashed #999",
-            borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: "8pt", color: "#999"
-          }}>Stamp</div>
+          <CompanyStamp size={110} />
         )}
       </div>
 

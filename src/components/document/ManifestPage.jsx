@@ -1,6 +1,7 @@
 import React from "react";
 import DocumentHeader from "./DocumentHeader";
 import PageFooter from "./PageFooter";
+import CompanyStamp from "./CompanyStamp";
 import { pageStyle } from "./styles";
 import { formatTripDate } from "@/lib/dateFormat";
 
@@ -119,16 +120,12 @@ export default function ManifestPage({ trip }) {
         </tbody>
       </table>
 
-      {/* Stamp bottom left */}
-      <div style={{ position: "absolute", bottom: "28mm", left: "12mm" }}>
+      {/* Company stamp - bottom left below passenger table */}
+      <div style={{ position: "absolute", bottom: "26mm", left: "12mm" }}>
         {trip.stamp_url ? (
-          <img src={trip.stamp_url} style={{ width: "80px", height: "80px", objectFit: "contain" }} />
+          <img src={trip.stamp_url} style={{ width: "110px", height: "110px", objectFit: "contain" }} />
         ) : (
-          <div style={{
-            width: "75px", height: "75px", border: "1px dashed #999",
-            borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: "8pt", color: "#999"
-          }}>Stamp</div>
+          <CompanyStamp size={110} />
         )}
       </div>
 

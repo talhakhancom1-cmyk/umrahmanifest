@@ -1,6 +1,7 @@
 import React from "react";
 import DocumentHeader from "./DocumentHeader";
 import PageFooter from "./PageFooter";
+import CompanyStamp from "./CompanyStamp";
 import { pageStyle } from "./styles";
 import { formatTripDate } from "@/lib/dateFormat";
 import { INSPECTION_CHECKLIST } from "@/lib/inspectionChecklist";
@@ -104,29 +105,18 @@ export default function InspectionPage({ trip }) {
         </div>
       ))}
 
-      {/* Declaration */}
-      <div style={{ marginTop: "12px", direction: "rtl" }}>
-        <div style={{ fontWeight: 700, fontSize: "11pt", marginBottom: "6px" }}>إقرار:</div>
-        <p style={{ margin: "0 0 10px", fontSize: "10.5pt" }}>
-          أقر أنا السائق أعلاه بأني قمت بفحص الحافلة والتأكد من سالمتها وجاهزيتها قبل التشغيل .
-        </p>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: "8px" }}>
-          <div style={{ direction: "ltr" }}>التوقيع: ...................................................................</div>
-          <div>إسم السائق: <b>{driverName}</b></div>
-        </div>
+      {/* Company stamp - above declaration */}
+      <div style={{ marginTop: "16px", display: "flex", justifyContent: "center" }}>
+        {trip.stamp_url ? (
+          <img src={trip.stamp_url} style={{ width: "100px", height: "100px", objectFit: "contain" }} />
+        ) : (
+          <CompanyStamp size={100} />
+        )}
       </div>
 
-      {/* Stamp */}
-      <div style={{ position: "absolute", bottom: "28mm", left: "12mm" }}>
-        {trip.stamp_url ? (
-          <img src={trip.stamp_url} style={{ width: "80px", height: "80px", objectFit: "contain" }} />
-        ) : (
-          <div style={{
-            width: "75px", height: "75px", border: "1px dashed #999",
-            borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: "8pt", color: "#999"
-          }}>Stamp</div>
-        )}
+      {/* Declaration */}
+      <div style={{ marginTop: "12px", direction: "rtl" }}>
+...
       </div>
 
       <PageFooter trip={trip} />
