@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageCircle, Building2, Send } from "lucide-react";
 import WhatsAppCredentials from "@/components/settings/WhatsAppCredentials";
+import TelegramSetup from "@/components/settings/TelegramSetup";
 import CompanyTemplateManager from "@/components/settings/CompanyTemplateManager";
 
 export default function Settings() {
@@ -20,6 +21,18 @@ export default function Settings() {
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+        <section>
+          <div className="flex items-center gap-2 mb-1">
+            <Send className="w-5 h-5 text-primary" />
+            <h2 className="text-base font-semibold">Telegram Bot Setup</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Without a bot token the Telegram bot will not work. Paste your token from BotFather
+            and click Connect — the webhook is registered automatically.
+          </p>
+          <TelegramSetup />
+        </section>
+
         <section>
           <div className="flex items-center gap-2 mb-1">
             <MessageCircle className="w-5 h-5 text-primary" />
