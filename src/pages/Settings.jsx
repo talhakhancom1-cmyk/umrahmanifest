@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageCircle, Building2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Building2, Send } from "lucide-react";
 import WhatsAppCredentials from "@/components/settings/WhatsAppCredentials";
 import CompanyTemplateManager from "@/components/settings/CompanyTemplateManager";
 
@@ -23,11 +23,12 @@ export default function Settings() {
         <section>
           <div className="flex items-center gap-2 mb-1">
             <MessageCircle className="w-5 h-5 text-primary" />
-            <h2 className="text-base font-semibold">WhatsApp Business API</h2>
+            <h2 className="text-base font-semibold">WhatsApp & Telegram Credentials</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Enter the credentials from your Meta WhatsApp Business dashboard.
-            The webhook function uses these to receive messages and send replies.
+            Enter your WhatsApp Business API credentials and Telegram bot token (from BotFather).
+            Both webhook functions use these to receive messages and send replies in the same
+            conversational flow.
           </p>
           <WhatsAppCredentials />
         </section>
@@ -38,8 +39,8 @@ export default function Settings() {
             <h2 className="text-base font-semibold">Company Templates</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            When you start a trip via WhatsApp, the agent asks which company to use.
-            Each template fills the document header, footer, logo, stamp, and QR code.
+            The active template fills the document header, footer, logo, stamp, and QR code
+            for every trip created via WhatsApp or Telegram.
           </p>
           <CompanyTemplateManager />
         </section>

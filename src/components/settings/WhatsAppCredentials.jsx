@@ -12,7 +12,8 @@ export default function WhatsAppCredentials() {
     phone_number_id: "",
     access_token: "",
     verify_token: "",
-    app_url: ""
+    app_url: "",
+    telegram_bot_token: ""
   });
   const [recordId, setRecordId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,8 @@ export default function WhatsAppCredentials() {
             phone_number_id: records[0].phone_number_id || "",
             access_token: records[0].access_token || "",
             verify_token: records[0].verify_token || "",
-            app_url: records[0].app_url || ""
+            app_url: records[0].app_url || "",
+            telegram_bot_token: records[0].telegram_bot_token || ""
           });
         }
       })
@@ -85,11 +87,20 @@ export default function WhatsAppCredentials() {
           />
         </div>
         <div className="space-y-1.5 md:col-span-2">
-          <Label>App URL (for document links sent in WhatsApp)</Label>
+          <Label>App URL (for document links sent in chat)</Label>
           <Input
             value={form.app_url}
             onChange={(e) => setForm({ ...form, app_url: e.target.value })}
             placeholder="https://your-app-domain.base44.app"
+          />
+        </div>
+        <div className="space-y-1.5 md:col-span-2">
+          <Label>Telegram Bot Token</Label>
+          <Input
+            value={form.telegram_bot_token}
+            onChange={(e) => setForm({ ...form, telegram_bot_token: e.target.value })}
+            placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz (from BotFather)"
+            className="font-mono text-xs"
           />
         </div>
       </div>
@@ -98,10 +109,20 @@ export default function WhatsAppCredentials() {
         <div className="flex items-start gap-2">
           <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
           <div>
-            <span className="font-medium text-foreground">Webhook setup:</span> After saving, go to your
+            <span className="font-medium text-foreground">WhatsApp webhook:</span> After saving, go to your
             Meta WhatsApp Business dashboard → Configuration → Webhook. Find your webhook URL in the
             Base44 dashboard under Code → Functions → <code className="text-xs">whatsapp_webhook</code>.
             Subscribe to the <code className="text-xs">messages</code> field.
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
+          <div>
+            <span className="font-medium text-foreground">Telegram webhook:</span> After saving, set the
+            webhook by calling
+            <code className="text-xs"> https://api.telegram.org/bot&lt;token&gt;/setWebhook?url=&lt;function_url&gt;</code>.
+            Find your webhook URL in the Base44 dashboard under Code → Functions →
+            <code className="text-xs">telegram_webhook</code>.
           </div>
         </div>
       </div>
