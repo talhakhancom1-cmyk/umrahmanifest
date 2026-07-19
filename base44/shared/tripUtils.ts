@@ -38,10 +38,11 @@ export async function processPassengerPhoto(base44, fileUrl) {
     response_json_schema: OCR_SCHEMA,
     model: "claude_sonnet_4_6"
   });
+  const data = (ocrRes && ocrRes.response) ? ocrRes.response : (ocrRes || {});
   return {
-    name: ocrRes.full_name || "",
-    id_number: ocrRes.id_number || "",
-    nationality: ocrRes.nationality || ""
+    name: data.full_name || "",
+    id_number: data.id_number || "",
+    nationality: data.nationality || ""
   };
 }
 
