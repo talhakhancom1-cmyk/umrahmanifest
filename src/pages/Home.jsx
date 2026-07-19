@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Trash2, ArrowRight } from "lucide-react";
+import { Plus, FileText, Trash2, ArrowRight, Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const routeLabel = (t) => {
@@ -90,9 +90,14 @@ export default function Home() {
               Batch-extract passenger photos into ready-to-send manifests.
             </p>
           </div>
-          <Button onClick={newTrip}>
-            <Plus className="w-4 h-4" /> New Trip
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate("/settings")}>
+              <SettingsIcon className="w-4 h-4" /> Settings
+            </Button>
+            <Button onClick={newTrip}>
+              <Plus className="w-4 h-4" /> New Trip
+            </Button>
+          </div>
         </div>
       </header>
       <main className="max-w-5xl mx-auto px-6 py-8">

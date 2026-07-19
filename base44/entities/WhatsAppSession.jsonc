@@ -1,0 +1,66 @@
+{
+  "name": "WhatsAppSession",
+  "type": "object",
+  "properties": {
+    "phone_number": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "awaiting_company",
+        "awaiting_route",
+        "collecting",
+        "done"
+      ],
+      "default": "idle"
+    },
+    "company_template_id": {
+      "type": "string"
+    },
+    "route_from": {
+      "type": "string",
+      "enum": [
+        "Madina",
+        "Makkah"
+      ]
+    },
+    "route_to": {
+      "type": "string",
+      "enum": [
+        "Madina",
+        "Makkah"
+      ]
+    },
+    "passengers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id_number": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "photo_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "trip_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "phone_number"
+  ]
+}

@@ -55,6 +55,9 @@
     "company_name_ar": {
       "type": "string"
     },
+    "cr_number": {
+      "type": "string"
+    },
     "logo_url": {
       "type": "string"
     },
@@ -62,6 +65,12 @@
       "type": "string"
     },
     "qr_url": {
+      "type": "string"
+    },
+    "footer_ar": {
+      "type": "string"
+    },
+    "footer_en": {
       "type": "string"
     },
     "passengers": {

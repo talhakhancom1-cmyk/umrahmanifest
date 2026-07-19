@@ -1,0 +1,38 @@
+{
+  "name": "CompanyTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "name_ar": {
+      "type": "string"
+    },
+    "cr_number": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "stamp_url": {
+      "type": "string"
+    },
+    "qr_url": {
+      "type": "string"
+    },
+    "footer_ar": {
+      "type": "string"
+    },
+    "footer_en": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "name_ar"
+  ]
+}
