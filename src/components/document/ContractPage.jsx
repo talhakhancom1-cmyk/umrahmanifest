@@ -116,7 +116,7 @@ export default function ContractPage({ trip }) {
         )}
       </div>
 
-      <PageFooter />
+      <PageFooter trip={trip} />
     </div>
   );
 }

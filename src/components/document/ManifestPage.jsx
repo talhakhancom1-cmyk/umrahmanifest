@@ -132,7 +132,7 @@ export default function ManifestPage({ trip }) {
         )}
       </div>
 
-      <PageFooter />
+      <PageFooter trip={trip} />
     </div>
   );
 }

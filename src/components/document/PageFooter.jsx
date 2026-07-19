@@ -1,9 +1,10 @@
 import React from "react";
 
 export default function PageFooter({ trip }) {
-  const footerAr = trip.footer_ar ||
+  const t = trip || {};
+  const footerAr = t.footer_ar ||
     "المملكة العربية السعودية - الجبيل - تلفون 013 3633115 - 013 + فاكس: 013 3622264 - ص.ب واصل 3107 - الجبيل 35513 - 9278";
-  const footerEn = trip.footer_en ||
+  const footerEn = t.footer_en ||
     "Saudi Arabia - Jubail - Tel.: 013 363 3115 - Fax: 013 362 2264 - P.O. Box 3107 - Wasel - Jubail 35513 - 9278";
 
   return (

@@ -129,7 +129,7 @@ export default function InspectionPage({ trip }) {
         )}
       </div>
 
-      <PageFooter />
+      <PageFooter trip={trip} />
     </div>
   );
 }
