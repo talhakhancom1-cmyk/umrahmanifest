@@ -1,36 +1,36 @@
-export const INSPECTION_CHECKLIST = {
-  dashboard_indicators: {
-    title: "Dashboard Indicators / مؤشرات لوحة العدادات",
+export const INSPECTION_CHECKLIST = [
+  {
+    titleAr: "أول: فحص مؤشرات لوحة القيادة:",
+    titleEn: "FIRST: CHECK THE DASHBOUARD INDID",
     items: [
-      "Oil pressure gauge",
-      "Fuel gauge",
-      "Temperature gauge",
-      "Battery / Alternator",
-      "Engine check light",
-      "Speedometer",
-      "Odometer"
+      { ar: "مؤشر الوقود", en: "FUEL GAUGE" },
+      { ar: "مؤشر الحرارة", en: "TEMPERATURE GAUGE" },
+      { ar: "مؤشر ضغط الزيت", en: "OIL PRESSURE GAGUE" },
+      { ar: "لمبة فحص المحرك", en: "CHECK ENGIN LIGHT" },
+      { ar: "لمبة ABC", en: "ABS LIGHT" },
+      { ar: "لمبة التحذير", en: "WARNING LIGHT" }
     ]
   },
-  external_inspection: {
-    title: "External Inspection / الفحص الخارجي",
+  {
+    titleAr: "ثانيا : الفحص الخارجي:",
+    titleEn: "SECOND: EXTERNAL INSPECTION:",
     items: [
-      "Tires & pressure",
-      "Headlights & signals",
-      "Taillights & brake lights",
-      "Mirrors",
-      "Windshield & wipers",
-      "Body & doors",
-      "License plates"
+      { ar: "الطارات و ضغط الهواء", en: "TIRES ANDORRA AIR" },
+      { ar: "النوار الأمامية والخلفية", en: "HEADLIGHTS ANDORRA TAILIGHT" },
+      { ar: "الأشارات التحذيرية", en: "WARNING SIGNALS" },
+      { ar: "الزجاج و المرايا", en: "GLASS ANDORRA MIRRORS" },
+      { ar: "عدم وجود تسريبات", en: "NO LEAKS" }
     ]
   },
-  safety_tools: {
-    title: "Safety Tools / أدوات السلامة",
+  {
+    titleAr: "ثالثا: أدوات و متطلبات الأمن و السلامة:",
+    titleEn: "THIRD: SAFETY ANDORRA SECURITY TOOLS ANDORRA REQUIREMENTS:",
     items: [
-      "Spare tire & jack",
-      "Fire extinguisher",
-      "First aid kit",
-      "Warning triangle",
-      "Seatbelts"
+      { ar: "طفاية حريق سارية الصلاحية", en: "VALID FIRE EXTINGUISHER" },
+      { ar: "مثلث تحذيري", en: "WARNING TRIANGLE" },
+      { ar: "حقيبة اسعافات اولية", en: "FIRST AID KIT" },
+      { ar: "مطرقة كسر الزجاج", en: "GLASS BREAKR HAMMER" },
+      { ar: "أحزمة الأمان", en: "SAFETY BELTES" }
     ]
   }
-};
+];

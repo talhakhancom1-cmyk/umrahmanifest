@@ -1,16 +1,17 @@
-export const PRIMARY = "#1a3a5c";
-export const LIGHT = "#e8edf2";
+export const PRIMARY = "#cc0000";
+export const DARK = "#1a1a1a";
+export const LIGHT_GRAY = "#f0f0f0";
 
 export const pageStyle = {
   width: "210mm",
   minHeight: "297mm",
   background: "#fff",
   margin: "0 auto 18px",
-  padding: "14mm 14mm",
+  padding: "8mm 12mm 10mm",
   boxSizing: "border-box",
   fontFamily: "'Cairo', Arial, sans-serif",
   color: "#111",
-  fontSize: "12pt",
+  fontSize: "11pt",
   lineHeight: 1.5,
   position: "relative"
 };
@@ -22,14 +23,25 @@ export const tableStyle = {
 };
 
 export const cellStyle = {
-  border: "1px solid #333",
-  padding: "6px 8px"
+  border: "1px solid #555",
+  padding: "5px 8px",
+  textAlign: "center"
 };
 
 export const headerCellStyle = {
-  border: "1px solid #333",
-  background: LIGHT,
+  border: "1px solid #555",
+  background: "#222",
+  color: "#fff",
   fontWeight: 700,
   textAlign: "center",
-  padding: "6px 8px"
+  padding: "5px 8px"
+};
+
+export const footerBar = {
+  fontSize: "7.5pt",
+  textAlign: "center",
+  color: "#333",
+  borderTop: "1px solid #555",
+  paddingTop: "4px",
+  marginTop: "auto"
 };
