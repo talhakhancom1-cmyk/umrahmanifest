@@ -75,7 +75,21 @@ async function startCollecting(base44, sessionEntityName, session, sendMessage) 
     driver: null,
     trip_id: null
   });
-  await sendMessage('📸 Send me photos of each passenger\'s ID (passport/visa/iqama).\n\nI\'ll extract their name, ID number, and nationality.\n\nWhen you\'re done, send "done".');
+  await sendMessage(
+    '🕋 *Umrah Transport Manifest Bot*\n' +
+    '━━━━━━━━━━━━━━━━━━\n\n' +
+    '👋 Welcome! Let\'s create a new trip manifest.\n\n' +
+    '*How it works:*\n' +
+    '1️⃣ 📸 Send a photo of each passenger\'s ID\n' +
+    '      (passport / visa / iqama)\n' +
+    '2️⃣ ✅ Send *done* when all passengers are added\n' +
+    '3️⃣ 🛣️ Choose the route, date & driver\n' +
+    '4️⃣ 📄 Receive your ready-to-print document\n\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '📸 *Please send the first passenger\'s ID photo now.*\n\n' +
+    '_Send "cancel" anytime to start over._',
+    { keyboard: ["done", "cancel"], markdown: true }
+  );
 }
 
 async function processPhoto(base44, sessionEntityName, session, photoDownloader, sendMessage) {

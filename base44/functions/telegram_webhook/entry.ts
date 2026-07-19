@@ -5,6 +5,7 @@ const TG_API = "https://api.telegram.org/bot";
 
 async function sendTelegramMessage(token, chatId, text, extra) {
   const body = { chat_id: chatId, text };
+  if (extra && extra.markdown) body.parse_mode = "Markdown";
   if (extra && extra.keyboard) {
     body.reply_markup = {
       keyboard: extra.keyboard.map((t) => [{ text: t }]),
