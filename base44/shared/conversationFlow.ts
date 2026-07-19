@@ -10,7 +10,7 @@ export async function handleTextUpdate(base44, sessionEntityName, session, text,
   }
 
   if (session.state === "idle" || session.state === "done" ||
-      lowerText === "start" || lowerText === "new" || lowerText === "جديد" || lowerText === "ابدأ") {
+      lowerText === "start" || lowerText === "new" || lowerText === "جديد" || lowerText === "ابدأ" || lowerText === "/start") {
     await startCollecting(base44, sessionEntityName, session, sendMessage);
   } else if (session.state === "collecting") {
     if (lowerText === "done" || lowerText === "finish" || lowerText === "تم" || lowerText === "انتهيت" || lowerText === "انهيت") {
@@ -21,7 +21,11 @@ export async function handleTextUpdate(base44, sessionEntityName, session, text,
   } else if (session.state === "awaiting_route") {
     await handleRouteSelection(base44, sessionEntityName, session, lowerText, sendMessage);
   } else if (session.state === "awaiting_datetime") {
-    await handleDateTime(base44, sessionEntityName, session, text.trim(), sendMessage, appUrl);
+    await handleDateTime(base44, sessionEntityName, session, text.trim(), sendMessage);
+  } else if (session.state === "awaiting_company") {
+    await handleCompanySelection(base44, sessionEntityName, session, text.trim(), sendMessage);
+  } else if (session.state === "awaiting_driver") {
+    await handleDriverSelection(base44, sessionEntityName, session, text.trim(), sendMessage, appUrl);
   }
 }
 
@@ -32,6 +36,8 @@ export async function handlePhotoUpdate(base44, sessionEntityName, session, phot
     await sendMessage("Please reply with 1 or 2 for the route first.");
   } else if (session.state === "awaiting_datetime") {
     await sendMessage('Please send the date and time first (e.g. 2024-01-15 7:05 PM).');
+  } else if (session.state === "awaiting_company" || session.state === "awaiting_driver") {
+    await sendMessage("Please pick an option from the menu first.");
   } else {
     await sendMessage('To start a new trip, send "start".');
   }
@@ -46,6 +52,10 @@ async function resetSession(base44, sessionEntityName, session) {
     route_to: null,
     travel_date: null,
     trip_time: null,
+    company_menu: [],
+    company_id: null,
+    driver_menu: [],
+    driver: null,
     trip_id: null
   });
 }
@@ -59,6 +69,10 @@ async function startCollecting(base44, sessionEntityName, session, sendMessage) 
     route_to: null,
     travel_date: null,
     trip_time: null,
+    company_menu: [],
+    company_id: null,
+    driver_menu: [],
+    driver: null,
     trip_id: null
   });
   await sendMessage('📸 Send me photos of each passenger\'s ID (passport/visa/iqama).\n\nI\'ll extract their name, ID number, and nationality.\n\nWhen you\'re done, send "done".');
@@ -93,15 +107,18 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_route"
   });
-  await sendMessage("🛣️ What is the route?\n1. Madinah → Makkah\n2. Makkah → Madinah\n\nReply with 1 or 2.");
+  await sendMessage("🛣️ What is the route?\n1. Madinah → Makkah\n2. Makkah → Madinah\n\nReply with 1 or 2.", {
+    keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
+  });
 }
 
 async function handleRouteSelection(base44, sessionEntityName, session, text, sendMessage) {
+  const num = (text.match(/^(\d+)/) || [])[1];
   let routeFrom, routeTo;
-  if (text === "1") {
+  if (num === "1") {
     routeFrom = "Madina";
     routeTo = "Makkah";
-  } else if (text === "2") {
+  } else if (num === "2") {
     routeFrom = "Makkah";
     routeTo = "Madina";
   } else {
@@ -116,7 +133,7 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
   await sendMessage(`✅ Route: ${routeFrom} → ${routeTo}\n\n📅 What is the travel date and time?\n\nPlease send like: 2024-01-15 7:05 PM`);
 }
 
-async function handleDateTime(base44, sessionEntityName, session, rawText, sendMessage, appUrl) {
+async function handleDateTime(base44, sessionEntityName, session, rawText, sendMessage) {
   const text = rawText.trim();
   const dateMatch = text.match(/(\d{4}-\d{2}-\d{2})/);
   const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?)/);
@@ -135,10 +152,97 @@ async function handleDateTime(base44, sessionEntityName, session, rawText, sendM
   });
 
   const updatedSession = { ...session, travel_date: travelDate, trip_time: tripTime };
-  await finalizeTrip(base44, sessionEntityName, updatedSession, sendMessage, appUrl);
+  await askCompany(base44, sessionEntityName, updatedSession, sendMessage);
 }
 
-async function finalizeTrip(base44, sessionEntityName, session, sendMessage, appUrl) {
+async function askCompany(base44, sessionEntityName, session, sendMessage) {
+  const companies = await base44.asServiceRole.entities.CompanyTemplate.filter({ is_active: true }, "-updated_date", 10);
+  if (!companies.length) {
+    await sendMessage("⚠️ No company template configured. Please add one in the app Settings page first.");
+    return;
+  }
+  const menu = companies.map((c, i) => `${i + 1}. ${c.name}`);
+  await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
+    state: "awaiting_company",
+    company_menu: companies.map((c) => c.id)
+  });
+  await sendMessage(`🏢 Select the company:\n\n${menu.join("\n")}\n\nReply with a number.`, { keyboard: menu });
+}
+
+async function handleCompanySelection(base44, sessionEntityName, session, text, sendMessage) {
+  const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
+  const ids = session.company_menu || [];
+  if (!num || num < 1 || num > ids.length) {
+    await sendMessage(`Please pick a number between 1 and ${ids.length}.`);
+    return;
+  }
+  const companyId = ids[num - 1];
+  await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
+    company_id: companyId
+  });
+  const updatedSession = { ...session, company_id: companyId };
+  await askDriver(base44, sessionEntityName, updatedSession, sendMessage);
+}
+
+async function askDriver(base44, sessionEntityName, session, sendMessage) {
+  // Build the driver menu from drivers used on recent trips
+  const trips = await base44.asServiceRole.entities.Trip.list("-updated_date", 50);
+  const seen = new Set();
+  const drivers = [];
+  for (const trip of trips) {
+    for (const d of trip.drivers || []) {
+      if (!d.name) continue;
+      const key = `${d.name}|${d.iqama_no || ""}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      drivers.push({
+        name: d.name,
+        iqama_no: d.iqama_no || "",
+        vehicle_plate: trip.vehicle_plate || "",
+        car_model: trip.car_model || ""
+      });
+      if (drivers.length >= 8) break;
+    }
+    if (drivers.length >= 8) break;
+  }
+
+  if (!drivers.length) {
+    // No known drivers — finalize without one
+    await finalizeTrip(base44, sessionEntityName, session, sendMessage);
+    return;
+  }
+
+  const menu = drivers.map((d, i) =>
+    `${i + 1}. ${d.name}${d.iqama_no ? ` — Iqama: ${d.iqama_no}` : ""}${d.vehicle_plate ? ` — ${d.vehicle_plate}` : ""}${d.car_model ? ` (${d.car_model})` : ""}`
+  );
+  await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
+    state: "awaiting_driver",
+    driver_menu: drivers
+  });
+  await sendMessage(`🚗 Select the driver:\n\n${menu.join("\n")}\n\nReply with a number, or send "skip" for no driver.`, {
+    keyboard: [...drivers.map((d, i) => `${i + 1}. ${d.name}`), "skip"]
+  });
+}
+
+async function handleDriverSelection(base44, sessionEntityName, session, text, sendMessage) {
+  const lower = text.toLowerCase();
+  if (lower === "skip" || lower === "تخطي") {
+    await finalizeTrip(base44, sessionEntityName, session, sendMessage);
+    return;
+  }
+  const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
+  const drivers = session.driver_menu || [];
+  if (!num || num < 1 || num > drivers.length) {
+    await sendMessage(`Please pick a number between 1 and ${drivers.length}, or send "skip".`);
+    return;
+  }
+  const driver = drivers[num - 1];
+  await base44.asServiceRole.entities[sessionEntityName].update(session.id, { driver });
+  const updatedSession = { ...session, driver };
+  await finalizeTrip(base44, sessionEntityName, updatedSession, sendMessage);
+}
+
+async function finalizeTrip(base44, sessionEntityName, session, sendMessage) {
   const result = await createTripFromTemplate(base44, session);
   if (!result) {
     await sendMessage("⚠️ No company template configured. Please add one in the app Settings page first.");
@@ -146,9 +250,11 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, app
   }
 
   const { trip, company } = result;
-  const docUrl = `${appUrl || ""}/trips/${trip.id}/document`;
+  const appId = Deno.env.get("BASE44_APP_ID");
+  const docUrl = `https://base44.app/api/apps/${appId}/functions/manifestView?trip_id=${trip.id}`;
 
-  await sendMessage(`✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}\n\n📄 View & download your document:\n${docUrl}\n\nTo start a new trip, send "start".`);
+  const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}` : "";
+  await sendMessage(`✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}\n\n📄 Open your document (use Print → Save as PDF to download):\n${docUrl}\n\nTo start a new trip, send "start".`);
 
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "done",

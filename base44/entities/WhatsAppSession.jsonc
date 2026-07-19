@@ -12,6 +12,8 @@
         "collecting",
         "awaiting_route",
         "awaiting_datetime",
+        "awaiting_company",
+        "awaiting_driver",
         "done"
       ],
       "default": "idle"
@@ -36,6 +38,52 @@
     },
     "trip_time": {
       "type": "string"
+    },
+    "company_menu": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "company_id": {
+      "type": "string"
+    },
+    "driver_menu": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "iqama_no": {
+            "type": "string"
+          },
+          "vehicle_plate": {
+            "type": "string"
+          },
+          "car_model": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "driver": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "iqama_no": {
+          "type": "string"
+        },
+        "vehicle_plate": {
+          "type": "string"
+        },
+        "car_model": {
+          "type": "string"
+        }
+      }
     },
     "passengers": {
       "type": "array",

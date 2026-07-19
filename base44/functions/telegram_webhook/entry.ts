@@ -3,11 +3,21 @@ import { handleTextUpdate, handlePhotoUpdate } from "../../shared/conversationFl
 
 const TG_API = "https://api.telegram.org/bot";
 
-async function sendTelegramMessage(token, chatId, text) {
+async function sendTelegramMessage(token, chatId, text, extra) {
+  const body = { chat_id: chatId, text };
+  if (extra && extra.keyboard) {
+    body.reply_markup = {
+      keyboard: extra.keyboard.map((t) => [{ text: t }]),
+      one_time_keyboard: true,
+      resize_keyboard: true
+    };
+  } else {
+    body.reply_markup = { remove_keyboard: true };
+  }
   await fetch(`${TG_API}${token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text })
+    body: JSON.stringify(body)
   });
 }
 
@@ -55,7 +65,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const sendMessage = (text) => sendTelegramMessage(token, chatId, text);
+    const sendMessage = (text, extra) => sendTelegramMessage(token, chatId, text, extra);
 
     if (message.text) {
       await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl);
