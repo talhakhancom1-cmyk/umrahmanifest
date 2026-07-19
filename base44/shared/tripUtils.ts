@@ -57,6 +57,11 @@ export async function createTripFromTemplate(base44, session) {
   if (!company) return null;
 
   const driver = session.driver || null;
+  const driversArr = [];
+  if (driver) {
+    driversArr.push({ name: driver.name, iqama_no: driver.iqama_no || "" });
+    if (driver.name2) driversArr.push({ name: driver.name2, iqama_no: driver.iqama_no2 || "" });
+  }
 
   const trip = await base44.asServiceRole.entities.Trip.create({
     trip_name: `${company.name} - ${session.route_from} to ${session.route_to} - ${session.travel_date}`,
@@ -65,7 +70,7 @@ export async function createTripFromTemplate(base44, session) {
     travel_date: session.travel_date,
     trip_time: session.trip_time,
     second_party_name: "",
-    drivers: driver ? [{ name: driver.name, iqama_no: driver.iqama_no || "" }] : [],
+    drivers: driversArr,
     vehicle_plate: driver ? (driver.vehicle_plate || "") : "",
     car_model: driver ? (driver.car_model || "") : "",
     company_name: company.name,

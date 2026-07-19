@@ -1,0 +1,33 @@
+{
+  "name": "Driver",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "iqama_no": {
+      "type": "string"
+    },
+    "name2": {
+      "type": "string",
+      "description": "Second driver name (optional, same vehicle)"
+    },
+    "iqama_no2": {
+      "type": "string",
+      "description": "Second driver iqama number"
+    },
+    "vehicle_plate": {
+      "type": "string"
+    },
+    "car_model": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

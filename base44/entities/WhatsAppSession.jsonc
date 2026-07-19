@@ -59,6 +59,12 @@
           "iqama_no": {
             "type": "string"
           },
+          "name2": {
+            "type": "string"
+          },
+          "iqama_no2": {
+            "type": "string"
+          },
           "vehicle_plate": {
             "type": "string"
           },
@@ -75,6 +81,12 @@
           "type": "string"
         },
         "iqama_no": {
+          "type": "string"
+        },
+        "name2": {
+          "type": "string"
+        },
+        "iqama_no2": {
           "type": "string"
         },
         "vehicle_plate": {

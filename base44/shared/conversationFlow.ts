@@ -185,25 +185,39 @@ async function handleCompanySelection(base44, sessionEntityName, session, text, 
 }
 
 async function askDriver(base44, sessionEntityName, session, sendMessage) {
-  // Build the driver menu from drivers used on recent trips
-  const trips = await base44.asServiceRole.entities.Trip.list("-updated_date", 50);
-  const seen = new Set();
-  const drivers = [];
-  for (const trip of trips) {
-    for (const d of trip.drivers || []) {
-      if (!d.name) continue;
-      const key = `${d.name}|${d.iqama_no || ""}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      drivers.push({
-        name: d.name,
-        iqama_no: d.iqama_no || "",
-        vehicle_plate: trip.vehicle_plate || "",
-        car_model: trip.car_model || ""
-      });
+  // Saved driver profiles first
+  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 8);
+  let drivers = saved.map((d) => ({
+    name: d.name,
+    iqama_no: d.iqama_no || "",
+    name2: d.name2 || "",
+    iqama_no2: d.iqama_no2 || "",
+    vehicle_plate: d.vehicle_plate || "",
+    car_model: d.car_model || ""
+  }));
+
+  if (!drivers.length) {
+    // Fall back to drivers used on recent trips
+    const trips = await base44.asServiceRole.entities.Trip.list("-updated_date", 50);
+    const seen = new Set();
+    for (const trip of trips) {
+      for (const d of trip.drivers || []) {
+        if (!d.name) continue;
+        const key = `${d.name}|${d.iqama_no || ""}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        drivers.push({
+          name: d.name,
+          iqama_no: d.iqama_no || "",
+          name2: "",
+          iqama_no2: "",
+          vehicle_plate: trip.vehicle_plate || "",
+          car_model: trip.car_model || ""
+        });
+        if (drivers.length >= 8) break;
+      }
       if (drivers.length >= 8) break;
     }
-    if (drivers.length >= 8) break;
   }
 
   if (!drivers.length) {
@@ -213,14 +227,14 @@ async function askDriver(base44, sessionEntityName, session, sendMessage) {
   }
 
   const menu = drivers.map((d, i) =>
-    `${i + 1}. ${d.name}${d.iqama_no ? ` — Iqama: ${d.iqama_no}` : ""}${d.vehicle_plate ? ` — ${d.vehicle_plate}` : ""}${d.car_model ? ` (${d.car_model})` : ""}`
+    `${i + 1}. ${d.name}${d.name2 ? ` & ${d.name2}` : ""}${d.iqama_no ? ` — Iqama: ${d.iqama_no}${d.iqama_no2 ? ` / ${d.iqama_no2}` : ""}` : ""}${d.vehicle_plate ? ` — ${d.vehicle_plate}` : ""}${d.car_model ? ` (${d.car_model})` : ""}`
   );
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_driver",
     driver_menu: drivers
   });
   await sendMessage(`🚗 Select the driver:\n\n${menu.join("\n")}\n\nReply with a number, or send "skip" for no driver.`, {
-    keyboard: [...drivers.map((d, i) => `${i + 1}. ${d.name}`), "skip"]
+    keyboard: [...drivers.map((d, i) => `${i + 1}. ${d.name}${d.name2 ? ` & ${d.name2}` : ""}`), "skip"]
   });
 }
 
@@ -253,7 +267,7 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage) {
   const appId = Deno.env.get("BASE44_APP_ID");
   const docUrl = `https://base44.app/api/apps/${appId}/functions/manifestView?trip_id=${trip.id}`;
 
-  const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}` : "";
+  const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
   await sendMessage(`✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}\n\n📄 Open your document (use Print → Save as PDF to download):\n${docUrl}\n\nTo start a new trip, send "start".`);
 
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
