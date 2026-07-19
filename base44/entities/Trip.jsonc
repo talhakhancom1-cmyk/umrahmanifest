@@ -1,0 +1,77 @@
+{
+  "name": "Trip",
+  "type": "object",
+  "properties": {
+    "trip_name": {
+      "type": "string"
+    },
+    "route": {
+      "type": "string",
+      "enum": [
+        "Madina_to_Makkah",
+        "Makkah_to_Madina"
+      ]
+    },
+    "travel_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "vehicle_plate": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "company_name_ar": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "stamp_url": {
+      "type": "string"
+    },
+    "qr_url": {
+      "type": "string"
+    },
+    "passengers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "id_number": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "photo_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "completed"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "trip_name",
+    "route",
+    "travel_date"
+  ]
+}
