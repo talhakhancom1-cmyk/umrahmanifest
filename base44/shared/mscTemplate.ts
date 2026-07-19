@@ -88,8 +88,8 @@ export function buildFromMscTemplate(templateHtml, trip) {
 
   // ---------- Page 1: contract ----------
   p1 = replaceTDivs(p1, [
-    (s) => s.includes("MEHREEN AMAN GUL") ? centered(secondParty) : null,
-    (s) => s === "M GORJON" ? centered(secondParty) : null,
+    (s) => s.includes("MEHREEN AMAN GUL") ? centered("M GORJON") : null,
+    (s) => s === "M GORJON" ? centered("M GORJON") : null,
     (s) => s === "MADINA" ? from : null,
     (s) => s === "MAKKAH" ? to : null,
     (s) => s.startsWith("15-Jul-26") ? date : null,
