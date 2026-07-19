@@ -14,6 +14,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Home from '@/pages/Home';
 import TripWorkspace from '@/pages/TripWorkspace';
+import TripDocument from '@/pages/TripDocument';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/" element={<Home />} />
         <Route path="/trips/:id" element={<TripWorkspace />} />
+        <Route path="/trips/:id/document" element={<TripDocument />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

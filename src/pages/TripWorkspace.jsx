@@ -11,12 +11,12 @@ import {
   SelectContent,
   SelectItem
 } from "@/components/ui/select";
-import { ArrowLeft, Save, FileDown, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
+import DriversEditor from "@/components/trips/DriversEditor";
 import TemplatePanel from "@/components/trips/TemplatePanel";
-import { generateTripPdf } from "@/lib/generateTripPdf";
 
 export default function TripWorkspace() {
   const { id } = useParams();
@@ -24,7 +24,6 @@ export default function TripWorkspace() {
   const { toast } = useToast();
   const [trip, setTrip] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     base44.entities.Trip.get(id)
@@ -40,10 +39,14 @@ export default function TripWorkspace() {
     try {
       await base44.entities.Trip.update(id, {
         trip_name: trip.trip_name,
-        route: trip.route,
+        route_from: trip.route_from,
+        route_to: trip.route_to,
         travel_date: trip.travel_date,
-        driver_name: trip.driver_name,
+        trip_time: trip.trip_time,
+        second_party_name: trip.second_party_name,
+        drivers: trip.drivers,
         vehicle_plate: trip.vehicle_plate,
+        car_model: trip.car_model,
         company_name: trip.company_name,
         company_name_ar: trip.company_name_ar,
         logo_url: trip.logo_url,
@@ -69,20 +72,12 @@ export default function TripWorkspace() {
     };
     setTrip(merged);
     base44.entities.Trip
-      .update(id, { passengers: merged.passengers, photo_urls: merged.photo_urls })
+      .update(id, {
+        passengers: merged.passengers,
+        photo_urls: merged.photo_urls
+      })
       .catch(() => {});
     toast({ title: `Extracted ${passengers.length} passengers` });
-  };
-
-  const generate = async () => {
-    setGenerating(true);
-    try {
-      await generateTripPdf(trip);
-    } catch (e) {
-      toast({ title: "PDF generation failed", variant: "destructive" });
-    } finally {
-      setGenerating(false);
-    }
   };
 
   if (!trip) {
@@ -93,7 +88,9 @@ export default function TripWorkspace() {
     );
   }
 
-  const destination = trip.route === "Madina_to_Makkah" ? "Makkah" : "Madinah";
+  const destination = `${(trip.route_from || "").toUpperCase()} TO ${(
+    trip.route_to || ""
+  ).toUpperCase()}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,16 +115,8 @@ export default function TripWorkspace() {
               )}{" "}
               Save
             </Button>
-            <Button
-              onClick={generate}
-              disabled={generating || !trip.passengers?.length}
-            >
-              {generating ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <FileDown className="w-4 h-4" />
-              )}{" "}
-              Generate PDF
+            <Button onClick={() => navigate(`/trips/${id}/document`)}>
+              <FileText className="w-4 h-4" /> Open Document
             </Button>
           </div>
         </div>
@@ -136,19 +125,22 @@ export default function TripWorkspace() {
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <Label>Route</Label>
-            <Select
-              value={trip.route}
-              onValueChange={(v) => setTrip({ ...trip, route: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Madina_to_Makkah">Madinah → Makkah</SelectItem>
-                <SelectItem value="Makkah_to_Madina">Makkah → Madinah</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Trip Name</Label>
+            <Input
+              value={trip.trip_name || ""}
+              onChange={(e) =>
+                setTrip({ ...trip, trip_name: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Second Party Name</Label>
+            <Input
+              value={trip.second_party_name || ""}
+              onChange={(e) =>
+                setTrip({ ...trip, second_party_name: e.target.value })
+              }
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Travel Date</Label>
@@ -160,15 +152,85 @@ export default function TripWorkspace() {
               }
             />
           </div>
-          <div className="flex items-end">
-            <PhotoUploader onExtracted={onExtracted} />
+          <div className="space-y-1.5">
+            <Label>Trip Time</Label>
+            <Input
+              placeholder="e.g. 7:05 PM"
+              value={trip.trip_time || ""}
+              onChange={(e) =>
+                setTrip({ ...trip, trip_time: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Route From</Label>
+            <Select
+              value={trip.route_from}
+              onValueChange={(v) => setTrip({ ...trip, route_from: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Madina">Madina</SelectItem>
+                <SelectItem value="Makkah">Makkah</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Route To</Label>
+            <Select
+              value={trip.route_to}
+              onValueChange={(v) => setTrip({ ...trip, route_to: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Madina">Madina</SelectItem>
+                <SelectItem value="Makkah">Makkah</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Drivers</Label>
+            <DriversEditor
+              drivers={trip.drivers || []}
+              onChange={(drivers) => setTrip({ ...trip, drivers })}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Plate No.</Label>
+              <Input
+                value={trip.vehicle_plate || ""}
+                onChange={(e) =>
+                  setTrip({ ...trip, vehicle_plate: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Car Model</Label>
+              <Input
+                value={trip.car_model || ""}
+                onChange={(e) =>
+                  setTrip({ ...trip, car_model: e.target.value })
+                }
+              />
+            </div>
           </div>
         </section>
 
         <section>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            Passengers
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Passengers
+            </h2>
+            <PhotoUploader onExtracted={onExtracted} />
+          </div>
           <PassengerTable
             passengers={trip.passengers || []}
             onChange={(passengers) => setTrip({ ...trip, passengers })}
@@ -179,7 +241,7 @@ export default function TripWorkspace() {
 
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            Template & Driver Info
+            Template & Company Assets
           </h2>
           <TemplatePanel trip={trip} setTrip={setTrip} />
         </section>

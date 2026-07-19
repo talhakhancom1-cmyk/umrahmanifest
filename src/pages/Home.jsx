@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileText, Trash2, ArrowRight } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-const routeLabel = (r) =>
-  r === "Madina_to_Makkah" ? "Madinah → Makkah" : "Makkah → Madinah";
+const routeLabel = (t) => {
+  const a = (t.route_from || "").toUpperCase();
+  const b = (t.route_to || "").toUpperCase();
+  return a && b ? `${a} → ${b}` : "—";
+};
 
 export default function Home() {
   const navigate = useNavigate();
@@ -41,16 +44,24 @@ export default function Home() {
           "logo_url",
           "stamp_url",
           "qr_url",
-          "driver_name",
-          "vehicle_plate"
+          "vehicle_plate",
+          "car_model",
+          "drivers",
+          "second_party_name"
         ].forEach((k) => {
           prefill[k] = latest[k];
         });
       }
       const created = await base44.entities.Trip.create({
         trip_name: `Trip ${new Date().toLocaleDateString()}`,
-        route: "Madina_to_Makkah",
+        route_from: "Madina",
+        route_to: "Makkah",
         travel_date: new Date().toISOString().slice(0, 10),
+        trip_time: "",
+        second_party_name: "",
+        drivers: [],
+        vehicle_plate: "",
+        car_model: "",
         passengers: [],
         photo_urls: [],
         status: "draft",
@@ -107,7 +118,7 @@ export default function Home() {
                 <div className="min-w-0">
                   <div className="font-medium truncate">{t.trip_name}</div>
                   <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
-                    <span>{routeLabel(t.route)}</span>
+                    <span>{routeLabel(t)}</span>
                     <span>·</span>
                     <span>{t.travel_date}</span>
                     <span>·</span>

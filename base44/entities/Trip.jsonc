@@ -5,21 +5,48 @@
     "trip_name": {
       "type": "string"
     },
-    "route": {
+    "route_from": {
       "type": "string",
       "enum": [
-        "Madina_to_Makkah",
-        "Makkah_to_Madina"
+        "Madina",
+        "Makkah"
+      ]
+    },
+    "route_to": {
+      "type": "string",
+      "enum": [
+        "Madina",
+        "Makkah"
       ]
     },
     "travel_date": {
       "type": "string",
       "format": "date"
     },
-    "driver_name": {
+    "trip_time": {
       "type": "string"
     },
+    "second_party_name": {
+      "type": "string"
+    },
+    "drivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "iqama_no": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "vehicle_plate": {
+      "type": "string"
+    },
+    "car_model": {
       "type": "string"
     },
     "company_name": {
@@ -71,7 +98,8 @@
   },
   "required": [
     "trip_name",
-    "route",
+    "route_from",
+    "route_to",
     "travel_date"
   ]
 }
