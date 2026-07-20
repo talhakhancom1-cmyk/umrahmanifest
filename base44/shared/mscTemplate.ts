@@ -168,7 +168,7 @@ export function buildFromMscTemplate(templateHtml, trip) {
   // rows 8..13 have no sample text — clone the template's own row-7 cells so
   // extra passengers align with the table both on screen and when printed
   const mkCell = (tpl, bottom, text) =>
-    `<div class="${tpl.cCls}" style="bottom:${bottom}px">` +
+    `<div class="${tpl.cCls}" style="bottom:${bottom}px;z-index:9">` +
     `<div class="${tpl.tCls}" style="left:0;width:266.667%;text-align:center">${text}</div></div>`;
   let extraCells = "";
   for (let i = 7; i < 13; i++) {
