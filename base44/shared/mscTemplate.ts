@@ -61,6 +61,39 @@ function addedCell(col, y, text) {
     `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:16px;color:#000;z-index:9;">${text}</div>`;
 }
 
+// Extracts the bottom (px) of manifest rows 8..13 from the template's own
+// row-number cells, so added rows line up exactly with the printed table.
+function extractRowBottoms(pageHtml, head) {
+  const bottoms = {};
+  pageHtml.replace(/<div class="(c [^"]+)"><div class="t [^"]+">([\s\S]*?)<\/div>/g, (m, cCls, inner) => {
+    const plain = inner.replace(/<[^>]+>/g, "").replace(/\u00a0/g, " ").trim().replace(/^\./, "");
+    if (/^([89]|1[0-3])$/.test(plain) && !(plain in bottoms)) {
+      const yCls = cCls.split(/\s+/).find((c) => /^y[0-9a-z]+$/.test(c));
+      if (yCls) {
+        const mm = head.match(new RegExp("\\." + yCls + "\\{bottom:(-?[0-9.]+)px"));
+        if (mm) bottoms[plain] = parseFloat(mm[1]);
+      }
+    }
+    return m;
+  });
+  return bottoms;
+}
+
+// Captures the container + text classes of a sample cell so rows 8..13 can be
+// built by cloning the template's own markup (identical on screen and print).
+function captureCellClasses(pageHtml, sampleText, useLast) {
+  const re = /<div class="(c [^"]+)"><div class="(t [^"]+)">([\s\S]*?)<\/div>/g;
+  let m, found = null;
+  while ((m = re.exec(pageHtml))) {
+    const plain = m[3].replace(/<[^>]+>/g, "").replace(/\u00a0/g, " ").trim();
+    if (plain === sampleText) {
+      found = { cCls: m[1], tCls: m[2] };
+      if (!useLast) break;
+    }
+  }
+  return found;
+}
+
 export function buildFromMscTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDate(t.travel_date);
@@ -96,6 +129,12 @@ export function buildFromMscTemplate(templateHtml, trip) {
   ]);
 
   // ---------- Page 2: manifest ----------
+  // Capture row-7 sample cells and native row positions BEFORE sample values are replaced
+  const nameTpl = captureCellClasses(p2, "AMBARAK");
+  const idTpl = captureCellClasses(p2, "AD650819");
+  const natTpl = captureCellClasses(p2, "LIBYA", true);
+  const rowBottoms = extractRowBottoms(p2, head);
+
   // Nationality column header (the sample has "PAKISTAN" baked in next to the Arabic label)
   const natHeader = esc(((passengers[0] || {}).nationality || "").toUpperCase());
   p2 = p2.replace("PAKISTAN", natHeader);
@@ -126,15 +165,26 @@ export function buildFromMscTemplate(templateHtml, trip) {
       return nmIdx >= 0 ? centered(pax(nmIdx, "name")) : null;
     },
   ]);
-  // rows 8..13 have no sample text — add positioned cells for extra passengers
+  // rows 8..13 have no sample text — clone the template's own row-7 cells so
+  // extra passengers align with the table both on screen and when printed
+  const mkCell = (tpl, bottom, text) =>
+    `<div class="${tpl.cCls}" style="bottom:${bottom}px">` +
+    `<div class="${tpl.tCls}" style="left:0;width:266.667%;text-align:center">${text}</div></div>`;
   let extraCells = "";
   for (let i = 7; i < 13; i++) {
     const p = passengers[i];
     if (!p) continue;
-    const y = ROW_Y[i];
-    extraCells += addedCell(COL_NAT, y, esc(p.nationality || ""));
-    extraCells += addedCell(COL_ID, y, esc(p.id_number || ""));
-    extraCells += addedCell(COL_NAME, y, esc(p.name || ""));
+    const b = rowBottoms[String(i + 1)];
+    if (b !== undefined && nameTpl && idTpl && natTpl) {
+      extraCells += mkCell(natTpl, b, esc(p.nationality || ""));
+      extraCells += mkCell(idTpl, b, esc(p.id_number || ""));
+      extraCells += mkCell(nameTpl, b, esc(p.name || ""));
+    } else {
+      const y = ROW_Y[i];
+      extraCells += addedCell(COL_NAT, y, esc(p.nationality || ""));
+      extraCells += addedCell(COL_ID, y, esc(p.id_number || ""));
+      extraCells += addedCell(COL_NAME, y, esc(p.name || ""));
+    }
   }
   if (extraCells) {
     p2 = p2.split('<div class="pc pc2 w0 h0">').join('<div class="pc pc2 w0 h0">' + extraCells);
