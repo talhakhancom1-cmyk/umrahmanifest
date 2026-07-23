@@ -40,17 +40,17 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
   const passengers = t.passengers || [];
 
   let cells = "";
-  cells += cell(HEADER_COLS.driver, HEADER_BOTTOM, esc(d1.name || ""), 14);
-  cells += cell(HEADER_COLS.plate, HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
-  cells += cell(HEADER_COLS.dest, HEADER_BOTTOM, from && to ? `${from} TO ${to}` : "", 13);
-  cells += cell(HEADER_COLS.date, HEADER_BOTTOM, `${date}${time ? " " + time : ""}`, 13);
+  cells += cell(HEADER_COLS.driver, HEADER_BOTTOM + 1, esc(d1.name || ""), 11);
+  cells += cell(HEADER_COLS.plate, HEADER_BOTTOM + 1, esc(t.vehicle_plate || ""), 11);
+  cells += cell(HEADER_COLS.dest, HEADER_BOTTOM + 1, from && to ? `${from} TO ${to}` : "", 10);
+  cells += cell(HEADER_COLS.date, HEADER_BOTTOM + 1, `${date}${time ? " " + time : ""}`, 10);
 
   for (let i = 0; i < Math.min(passengers.length, MAX_ROWS); i++) {
     const p = passengers[i] || {};
-    const bottom = ROW1_BOTTOM - i * ROW_STEP;
-    cells += cell(COLS.name, bottom, esc(p.name || ""), 13);
-    cells += cell(COLS.id, bottom, esc(p.id_number || ""), 13);
-    cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 13);
+    const bottom = ROW1_BOTTOM + 2.5 - i * ROW_STEP;
+    cells += cell(COLS.name, bottom, esc(p.name || ""), 11);
+    cells += cell(COLS.id, bottom, esc(p.id_number || ""), 11);
+    cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 11);
   }
 
   // inject the cells into page 2's content container
