@@ -25,6 +25,17 @@ const COLS = {
   nat: [141, 158]
 };
 
+// Page 3 (inspection log) geometry: header row + driver-name declaration line
+const P3_ROW_BOTTOM = 896;
+const P3_COLS = {
+  driver: [641, 190],
+  plate: [446, 190],
+  date: [251, 190],
+  time: [56, 190]
+};
+const P3_SIGN_NAME = [520, 250]; // next to "إسم السائق :" at the bottom
+const P3_SIGN_BOTTOM = 134;
+
 function cell(col, bottom, text, fontSize) {
   return `<div class="b44-cell" style="position:absolute;left:${col[0]}px;bottom:${bottom}px;width:${col[1]}px;` +
     `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${fontSize}px;color:#000;z-index:9">${text}</div>`;
@@ -53,14 +64,26 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
     cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 11);
   }
 
-  // inject the cells into page 2's content container
+  // page 3: inspection log header row + driver declaration line
+  let cells3 = "";
+  cells3 += cell(P3_COLS.driver, P3_ROW_BOTTOM, esc(d1.name || ""), 11);
+  cells3 += cell(P3_COLS.plate, P3_ROW_BOTTOM, esc(t.vehicle_plate || ""), 11);
+  cells3 += cell(P3_COLS.date, P3_ROW_BOTTOM, date, 11);
+  cells3 += cell(P3_COLS.time, P3_ROW_BOTTOM, time, 11);
+  cells3 += cell(P3_SIGN_NAME, P3_SIGN_BOTTOM, esc(d1.name || ""), 12);
+
+  // inject the cells into each page's content container
   let html = templateHtml;
-  const idx = html.indexOf('<div id="pf2"');
-  if (idx >= 0) {
-    const before = html.slice(0, idx);
-    const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${cells}`);
-    html = before + after;
-  }
+  const inject = (pageId, pageCells) => {
+    const idx = html.indexOf(`<div id="${pageId}"`);
+    if (idx >= 0) {
+      const before = html.slice(0, idx);
+      const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${pageCells}`);
+      html = before + after;
+    }
+  };
+  inject("pf2", cells);
+  inject("pf3", cells3);
 
   const extraCss = `
 <style>
