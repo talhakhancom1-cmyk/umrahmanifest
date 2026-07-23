@@ -82,6 +82,7 @@ export async function createTripFromTemplate(base44, session) {
     qr_url: company.qr_url || "",
     footer_ar: company.footer_ar || "",
     footer_en: company.footer_en || "",
+    template_url: company.template_url || "",
     passengers: session.passengers,
     photo_urls: session.photo_urls,
     status: "completed"

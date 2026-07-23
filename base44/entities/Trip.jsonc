@@ -73,6 +73,10 @@
     "footer_en": {
       "type": "string"
     },
+    "template_url": {
+      "type": "string",
+      "description": "Company manifest template URL used to render this trip's document"
+    },
     "passengers": {
       "type": "array",
       "items": {

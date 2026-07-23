@@ -1,5 +1,5 @@
 import { uploadImageBuffer, processPassengerPhoto, createTripFromTemplate } from "./tripUtils.ts";
-import { buildFromMscTemplate, MSC_TEMPLATE_URL } from "./mscTemplate.ts";
+import { buildManifestDoc } from "./manifestBuilder.ts";
 import { buildPdfFromMscHtml } from "./mscPdf.ts";
 
 export async function handleTextUpdate(base44, sessionEntityName, session, text, sendMessage, appUrl, sendDocument) {
@@ -318,10 +318,7 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, sen
 
   if (sendDocument) {
     try {
-      const res = await fetch(MSC_TEMPLATE_URL);
-      if (!res.ok) throw new Error("template fetch failed: " + res.status);
-      const templateHtml = await res.text();
-      const html = buildFromMscTemplate(templateHtml, trip);
+      const html = await buildManifestDoc(trip);
       const pdfBytes = await buildPdfFromMscHtml(html);
       const fileName = `${(trip.trip_name || "manifest").replace(/[^\w\- ]+/g, "").slice(0, 60) || "manifest"}.pdf`;
       await sendDocument(pdfBytes, fileName);

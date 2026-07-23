@@ -26,6 +26,10 @@
     "footer_en": {
       "type": "string"
     },
+    "template_url": {
+      "type": "string",
+      "description": "URL of the company's pdf2htmlEX manifest template (HTML). Empty = default MSC template."
+    },
     "is_active": {
       "type": "boolean",
       "default": true

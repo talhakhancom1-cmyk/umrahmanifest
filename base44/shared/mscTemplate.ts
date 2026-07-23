@@ -8,14 +8,14 @@ export const MSC_TEMPLATE_URL =
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function fmtDate(d) {
+export function fmtDate(d) {
   if (!d) return "";
   const date = new Date(d);
   if (isNaN(date.getTime())) return d;
   return `${String(date.getDate()).padStart(2, "0")}-${MONTHS[date.getMonth()]}-${String(date.getFullYear()).slice(-2)}`;
 }
 
-function esc(s) {
+export function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

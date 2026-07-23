@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { buildManifestHtml } from '../../shared/manifestHtml.ts';
-import { buildFromMscTemplate, MSC_TEMPLATE_URL } from '../../shared/mscTemplate.ts';
-
-let cachedTemplate = null;
+import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 
 // Public document viewer: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
@@ -20,14 +18,9 @@ Deno.serve(async (req) => {
 
     let html;
     try {
-      if (!cachedTemplate) {
-        const res = await fetch(MSC_TEMPLATE_URL);
-        if (!res.ok) throw new Error('template fetch failed: ' + res.status);
-        cachedTemplate = await res.text();
-      }
-      html = buildFromMscTemplate(cachedTemplate, trip);
+      html = await buildManifestDoc(trip);
     } catch (e) {
-      console.error('MSC template unavailable, using generated template:', e.message);
+      console.error('template unavailable, using generated template:', e.message);
       html = buildManifestHtml(trip);
     }
 

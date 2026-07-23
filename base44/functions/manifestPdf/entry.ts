@@ -1,8 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
-import { buildFromMscTemplate, MSC_TEMPLATE_URL } from '../../shared/mscTemplate.ts';
+import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 import { buildPdfFromMscHtml } from '../../shared/mscPdf.ts';
-
-let cachedTemplate = null;
 
 // Direct PDF download: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
@@ -18,13 +16,7 @@ Deno.serve(async (req) => {
     const trip = await base44.asServiceRole.entities.Trip.get(tripId);
     if (!trip) return new Response('Not found', { status: 404 });
 
-    if (!cachedTemplate) {
-      const res = await fetch(MSC_TEMPLATE_URL);
-      if (!res.ok) throw new Error('template fetch failed: ' + res.status);
-      cachedTemplate = await res.text();
-    }
-
-    const html = buildFromMscTemplate(cachedTemplate, trip);
+    const html = await buildManifestDoc(trip);
     const pdfBytes = await buildPdfFromMscHtml(html);
     const name = (trip.trip_name || 'manifest').replace(/[^\w\- ]+/g, '').slice(0, 60) || 'manifest';
 

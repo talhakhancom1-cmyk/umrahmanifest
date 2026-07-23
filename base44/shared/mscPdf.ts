@@ -43,6 +43,11 @@ export async function buildPdfFromMscHtml(html) {
     colors[cls] = rgb(r / 255, g / 255, b / 255);
     return m;
   });
+  const transparent = new Set();
+  head.replace(/\.(fc[0-9a-z]+)\{color:transparent/g, (m, cls) => {
+    transparent.add(cls);
+    return m;
+  });
 
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -94,6 +99,10 @@ export async function buildPdfFromMscHtml(html) {
         const inner = pageHtml.slice(re.lastIndex, closeIdx);
         re.lastIndex = closeIdx + 6;
 
+        // skip invisible selection text (image-fallback templates render it transparent)
+        const spanFc = (inner.match(/<span class="[^"]*\b(fc[0-9a-z]+)\b/) || [])[1];
+        if (transparent.has(tokOf(cls, "fc")) || (spanFc && transparent.has(spanFc))) continue;
+
         const text = decodeText(inner);
         if (!text.trim()) continue;
 
@@ -117,6 +126,20 @@ export async function buildPdfFromMscHtml(html) {
         } else {
           page.drawText(text, { x: baseLeft + tLeft, y, size, font, color });
         }
+      } else if (/^b44-cell(\s|$)/.test(cls)) {
+        // overlay cells injected by blank-form templates (position in inline style)
+        const closeIdx = pageHtml.indexOf("</div>", re.lastIndex);
+        const inner = pageHtml.slice(re.lastIndex, closeIdx);
+        re.lastIndex = closeIdx + 6;
+
+        const text = decodeText(inner).trim();
+        if (!text) continue;
+        const left = parseFloat((style.match(/left:(-?[0-9.]+)px/) || [])[1] || "0");
+        const bottom = parseFloat((style.match(/bottom:(-?[0-9.]+)px/) || [])[1] || "0");
+        const width = parseFloat((style.match(/width:(-?[0-9.]+)px/) || [])[1] || "0");
+        const size = parseFloat((style.match(/font-size:(-?[0-9.]+)px/) || [])[1] || "13");
+        const tw = font.widthOfTextAtSize(text, size);
+        page.drawText(text, { x: left + (width - tw) / 2, y: bottom + size * 0.21, size, font, color: rgb(0, 0, 0) });
       } else {
         stack.push(null);
       }

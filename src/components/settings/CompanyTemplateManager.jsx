@@ -45,6 +45,40 @@ function AssetField({ label, value, onChange }) {
   );
 }
 
+function TemplateField({ value, onChange }) {
+  const ref = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const upload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      onChange(file_url);
+    } finally {
+      setUploading(false);
+    }
+  };
+  return (
+    <div className="space-y-1.5">
+      <Label>Manifest Template (HTML)</Label>
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()} disabled={uploading}>
+          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+          Upload template
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {value ? "Custom template attached" : "Default template used"}
+        </span>
+        {value && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => onChange("")}>Clear</Button>
+        )}
+      </div>
+      <input ref={ref} type="file" accept=".html,.htm" className="hidden" onChange={upload} />
+    </div>
+  );
+}
+
 export default function CompanyTemplateManager() {
   const { toast } = useToast();
   const [templates, setTemplates] = useState([]);
@@ -55,7 +89,7 @@ export default function CompanyTemplateManager() {
   const blank = {
     name: "", name_ar: "", cr_number: "",
     logo_url: "", stamp_url: "", qr_url: "",
-    footer_ar: "", footer_en: "", is_active: true
+    footer_ar: "", footer_en: "", template_url: "", is_active: true
   };
   const [form, setForm] = useState(blank);
 
@@ -190,6 +224,7 @@ export default function CompanyTemplateManager() {
               <AssetField label="Stamp" value={form.stamp_url} onChange={(v) => setForm({ ...form, stamp_url: v })} />
               <AssetField label="QR Code" value={form.qr_url} onChange={(v) => setForm({ ...form, qr_url: v })} />
             </div>
+            <TemplateField value={form.template_url} onChange={(v) => setForm({ ...form, template_url: v })} />
             <div className="space-y-1.5">
               <Label>Footer (Arabic)</Label>
               <Textarea
