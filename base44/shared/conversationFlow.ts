@@ -225,16 +225,20 @@ async function handleCompanySelection(base44, sessionEntityName, session, text, 
 }
 
 async function askDriver(base44, sessionEntityName, session, sendMessage, sendDocument) {
-  // Saved driver profiles first
-  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 8);
-  let drivers = saved.map((d) => ({
-    name: d.name,
-    iqama_no: d.iqama_no || "",
-    name2: d.name2 || "",
-    iqama_no2: d.iqama_no2 || "",
-    vehicle_plate: d.vehicle_plate || "",
-    car_model: d.car_model || ""
-  }));
+  // Saved driver profiles for this company (or unassigned), then fallback to recent trips
+  const companyId = session.company_id;
+  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 20);
+  let drivers = saved
+    .filter((d) => !d.company_id || d.company_id === companyId)
+    .slice(0, 8)
+    .map((d) => ({
+      name: d.name,
+      iqama_no: d.iqama_no || "",
+      name2: d.name2 || "",
+      iqama_no2: d.iqama_no2 || "",
+      vehicle_plate: d.vehicle_plate || "",
+      car_model: d.car_model || ""
+    }));
 
   if (!drivers.length) {
     // Fall back to drivers used on recent trips

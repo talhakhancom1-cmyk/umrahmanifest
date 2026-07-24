@@ -22,6 +22,10 @@
     "car_model": {
       "type": "string"
     },
+    "company_id": {
+      "type": "string",
+      "description": "CompanyTemplate id this driver belongs to (empty = available to all companies)"
+    },
     "is_active": {
       "type": "boolean",
       "default": true
