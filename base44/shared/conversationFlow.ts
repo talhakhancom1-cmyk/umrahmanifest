@@ -133,14 +133,16 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
     state: "awaiting_route"
   });
   await sendMessage(
-    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n\nTap a button or reply with 1 or 2.`,
+    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n3️⃣ Riyadh → Makkah\n4️⃣ Riyadh → Madinah\n\nTap a button or reply with a number.`,
     {
       markdown: true,
       inline: [
         [{ text: "🕌 Madinah  →  🕋 Makkah", data: "1" }],
-        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }]
+        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }],
+        [{ text: "🏙️ Riyadh  →  🕋 Makkah", data: "3" }],
+        [{ text: "🏙️ Riyadh  →  🕌 Madinah", data: "4" }]
       ],
-      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
+      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah", "3. Riyadh → Makkah", "4. Riyadh → Madinah"]
     }
   );
 }
@@ -154,8 +156,14 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
   } else if (num === "2") {
     routeFrom = "Makkah";
     routeTo = "Madina";
+  } else if (num === "3") {
+    routeFrom = "Riyadh";
+    routeTo = "Makkah";
+  } else if (num === "4") {
+    routeFrom = "Riyadh";
+    routeTo = "Madina";
   } else {
-    await sendMessage("Please reply with 1 or 2.");
+    await sendMessage("Please reply with 1, 2, 3 or 4.");
     return;
   }
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
