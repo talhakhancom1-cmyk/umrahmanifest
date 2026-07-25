@@ -136,7 +136,8 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
     { from: "Riyadh", to: "Makkah", icon: "🏙️ → 🕋" },
     { from: "Riyadh", to: "Madina", icon: "🏙️ → 🕌" },
     { from: "Madina", to: "Riyadh", icon: "🕌 → 🏙️" },
-    { from: "Makkah", to: "Riyadh", icon: "🕋 → 🏙️" }
+    { from: "Makkah", to: "Riyadh", icon: "🕋 → 🏙️" },
+    { from: "Riyadh", to: "Dammam", icon: "🏙️ → 🌊" }
   ];
   const menu = ROUTES.map((r, i) => `${i + 1}. ${r.from} → ${r.to}`);
   await sendMessage(
@@ -157,7 +158,8 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
     { from: "Riyadh", to: "Makkah" },
     { from: "Riyadh", to: "Madina" },
     { from: "Madina", to: "Riyadh" },
-    { from: "Makkah", to: "Riyadh" }
+    { from: "Makkah", to: "Riyadh" },
+    { from: "Riyadh", to: "Dammam" }
   ];
   if (!num || num < 1 || num > ROUTES.length) {
     await sendMessage(`Please reply with a number between 1 and ${ROUTES.length}.`);

@@ -23,7 +23,8 @@
       "enum": [
         "Madina",
         "Makkah",
-        "Riyadh"
+        "Riyadh",
+        "Dammam"
       ]
     },
     "route_to": {
@@ -31,7 +32,8 @@
       "enum": [
         "Madina",
         "Makkah",
-        "Riyadh"
+        "Riyadh",
+        "Dammam"
       ]
     },
     "travel_date": {
