@@ -3,7 +3,8 @@ export const OCR_SCHEMA = {
   properties: {
     full_name: { type: "string" },
     id_number: { type: "string" },
-    nationality: { type: "string" }
+    nationality: { type: "string" },
+    gender: { type: "string" }
   },
   required: ["full_name", "id_number", "nationality"]
 };
@@ -20,7 +21,8 @@ Read the attached image VERY carefully. Rules:
 3. full_name: full name in UPPERCASE Latin letters exactly as printed. Never invent, translate, or reorder beyond MRZ rules. Do not include titles (MR/MRS).
 4. id_number: exact characters, letters and digits, no spaces or dashes. Do not confuse it with dates, document/serial numbers on card edges, or the check digit.
 5. nationality: the full English country name (e.g. "Pakistan", not "PAK" or "Pakistani").
-6. If a character is genuinely unreadable, choose the most likely one from context — never output placeholders like "X" or "?".
+6. gender: "Male" or "Female" based on the document. On passports, the MRZ line 2 position 21 is sex (M/F). On iqama/visa cards, look for "الجنس" / "Sex" / "Gender" field. If unclear, best guess from the name/photo.
+7. If a character is genuinely unreadable, choose the most likely one from context — never output placeholders like "X" or "?".
 
 Double-check digits 0/8, 1/7, 5/6 and letters O/0, I/1, S/5 against both the printed text and the MRZ before answering.
 Return ONLY the JSON object.`;
@@ -42,7 +44,8 @@ export async function processPassengerPhoto(base44, fileUrl) {
   return {
     name: data.full_name || "",
     id_number: data.id_number || "",
-    nationality: data.nationality || ""
+    nationality: data.nationality || "",
+    gender: data.gender || ""
   };
 }
 
