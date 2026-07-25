@@ -22,14 +22,16 @@
       "type": "string",
       "enum": [
         "Madina",
-        "Makkah"
+        "Makkah",
+        "Riyadh"
       ]
     },
     "route_to": {
       "type": "string",
       "enum": [
         "Madina",
-        "Makkah"
+        "Makkah",
+        "Riyadh"
       ]
     },
     "travel_date": {

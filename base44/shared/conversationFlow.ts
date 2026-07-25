@@ -130,32 +130,40 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_route"
   });
+  const ROUTES = [
+    { from: "Madina", to: "Makkah", icon: "🕌 → 🕋" },
+    { from: "Makkah", to: "Madina", icon: "🕋 → 🕌" },
+    { from: "Riyadh", to: "Makkah", icon: "🏙️ → 🕋" },
+    { from: "Riyadh", to: "Madina", icon: "🏙️ → 🕌" },
+    { from: "Madina", to: "Riyadh", icon: "🕌 → 🏙️" },
+    { from: "Makkah", to: "Riyadh", icon: "🕋 → 🏙️" }
+  ];
+  const menu = ROUTES.map((r, i) => `${i + 1}. ${r.from} → ${r.to}`);
   await sendMessage(
-    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n\nTap a button or reply with 1 or 2.`,
+    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n${menu.join("\n")}\n\nTap a button or reply with a number.`,
     {
       markdown: true,
-      inline: [
-        [{ text: "🕌 Madinah  →  🕋 Makkah", data: "1" }],
-        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }]
-      ],
-      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
+      inline: ROUTES.map((r, i) => [{ text: `${r.icon} ${r.from} → ${r.to}`, data: String(i + 1) }]),
+      keyboard: menu
     }
   );
 }
 
 async function handleRouteSelection(base44, sessionEntityName, session, text, sendMessage) {
-  const num = (text.match(/^(\d+)/) || [])[1];
-  let routeFrom, routeTo;
-  if (num === "1") {
-    routeFrom = "Madina";
-    routeTo = "Makkah";
-  } else if (num === "2") {
-    routeFrom = "Makkah";
-    routeTo = "Madina";
-  } else {
-    await sendMessage("Please reply with 1 or 2.");
+  const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
+  const ROUTES = [
+    { from: "Madina", to: "Makkah" },
+    { from: "Makkah", to: "Madina" },
+    { from: "Riyadh", to: "Makkah" },
+    { from: "Riyadh", to: "Madina" },
+    { from: "Madina", to: "Riyadh" },
+    { from: "Makkah", to: "Riyadh" }
+  ];
+  if (!num || num < 1 || num > ROUTES.length) {
+    await sendMessage(`Please reply with a number between 1 and ${ROUTES.length}.`);
     return;
   }
+  const { from: routeFrom, to: routeTo } = ROUTES[num - 1];
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_datetime",
     route_from: routeFrom,
