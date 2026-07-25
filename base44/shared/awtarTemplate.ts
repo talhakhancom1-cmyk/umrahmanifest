@@ -25,6 +25,16 @@ const COLS = {
   nat: [141, 158]
 };
 
+// Page 3 (inspection) header cells — measured from the template's background image.
+// Columns are RTL: Driver | Plate | Date | Inspection Time
+const P3_HEADER_BOTTOM = 893;
+const P3_HEADER_COLS = {
+  driver: [639.4, 197.2],
+  plate: [444.4, 195.0],
+  date: [249.4, 195.0],
+  time: [54.0, 195.4]
+};
+
 function cell(col, bottom, text, fontSize) {
   return `<div class="b44-cell" style="position:absolute;left:${col[0]}px;bottom:${bottom}px;width:${col[1]}px;` +
     `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${fontSize}px;color:#000;z-index:9">${text}</div>`;
@@ -39,28 +49,40 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
   const d1 = (t.drivers || [])[0] || {};
   const passengers = t.passengers || [];
 
-  let cells = "";
-  cells += cell(HEADER_COLS.driver, HEADER_BOTTOM, esc(d1.name || ""), 14);
-  cells += cell(HEADER_COLS.plate, HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
-  cells += cell(HEADER_COLS.dest, HEADER_BOTTOM, from && to ? `${from} TO ${to}` : "", 13);
-  cells += cell(HEADER_COLS.date, HEADER_BOTTOM, `${date}${time ? " " + time : ""}`, 13);
+  // ---- Page 2 (manifest) cells ----
+  let p2Cells = "";
+  p2Cells += cell(HEADER_COLS.driver, HEADER_BOTTOM, esc(d1.name || ""), 14);
+  p2Cells += cell(HEADER_COLS.plate, HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
+  p2Cells += cell(HEADER_COLS.dest, HEADER_BOTTOM, from && to ? `${from} TO ${to}` : "", 13);
+  p2Cells += cell(HEADER_COLS.date, HEADER_BOTTOM, `${date}${time ? " " + time : ""}`, 13);
 
   for (let i = 0; i < Math.min(passengers.length, MAX_ROWS); i++) {
     const p = passengers[i] || {};
     const bottom = ROW1_BOTTOM - i * ROW_STEP;
-    cells += cell(COLS.name, bottom, esc(p.name || ""), 13);
-    cells += cell(COLS.id, bottom, esc(p.id_number || ""), 13);
-    cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 13);
+    p2Cells += cell(COLS.name, bottom, esc(p.name || ""), 13);
+    p2Cells += cell(COLS.id, bottom, esc(p.id_number || ""), 13);
+    p2Cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 13);
   }
 
-  // inject the cells into page 2's content container
+  // ---- Page 3 (inspection) header cells ----
+  let p3Cells = "";
+  p3Cells += cell(P3_HEADER_COLS.driver, P3_HEADER_BOTTOM, esc(d1.name || ""), 14);
+  p3Cells += cell(P3_HEADER_COLS.plate, P3_HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
+  p3Cells += cell(P3_HEADER_COLS.date, P3_HEADER_BOTTOM, date, 13);
+  p3Cells += cell(P3_HEADER_COLS.time, P3_HEADER_BOTTOM, time, 13);
+
+  // inject page-specific cells into each page's content container
   let html = templateHtml;
-  const idx = html.indexOf('<div id="pf2"');
-  if (idx >= 0) {
-    const before = html.slice(0, idx);
-    const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${cells}`);
-    html = before + after;
-  }
+  const inject = (pageId, cells) => {
+    const idx = html.indexOf(`<div id="${pageId}"`);
+    if (idx >= 0) {
+      const before = html.slice(0, idx);
+      const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${cells}`);
+      html = before + after;
+    }
+  };
+  inject("pf2", p2Cells);
+  inject("pf3", p3Cells);
 
   const extraCss = `
 <style>
