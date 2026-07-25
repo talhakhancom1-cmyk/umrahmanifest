@@ -203,8 +203,14 @@ export function buildFromMscTemplate(templateHtml, trip) {
 #sidebar{display:none!important}
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
-@media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:236.4mm 334.2mm;margin:0}.pf{page-break-after:always;page-break-inside:avoid}.pf:last-child{page-break-after:auto}}
+.pc{display:block!important;opacity:1!important}
+@media print{
+@page{size:210mm 297mm;margin:0}
+html,body{margin:0!important;padding:0!important;background:#fff!important}
+#page-container{position:static!important;left:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:none!important;border:none!important}
+.pf{zoom:0.888;margin:0!important;box-shadow:none!important;border:none!important;page-break-after:always;page-break-inside:avoid}
+.pf:last-of-type{page-break-after:auto}
+}
 </style>`;
   head = head.replace("</head>", extraCss + "\n</head>");
   head = head.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
