@@ -204,7 +204,7 @@ export function buildFromMscTemplate(templateHtml, trip) {
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}}
+@media print{@page{size:893.25px 1263.375px;margin:0}.pf{page-break-after:always;page-break-inside:avoid}.pf:last-child{page-break-after:auto}}
 </style>`;
   head = head.replace("</head>", extraCss + "\n</head>");
   head = head.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
