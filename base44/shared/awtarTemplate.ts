@@ -91,7 +91,7 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}.pf{width:210mm!important;height:297mm!important;overflow:hidden;page-break-after:always;page-break-inside:avoid}.pf:last-child{page-break-after:auto}.pc{transform:scale(0.8885);transform-origin:0 0;width:112.55%!important;height:112.55%!important}}
+@media print{@page{size:A4;margin:0}.pf{zoom:0.8885;page-break-after:always;page-break-inside:avoid}.pf:last-child{page-break-after:auto}}
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
