@@ -6,7 +6,6 @@ import { ArrowLeft, Printer, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { downloadWord } from "@/lib/wordExport.jsx";
 import { generateManifest } from "@/functions/generateManifest";
-import { appParams } from "@/lib/app-params";
 
 export default function TripDocument() {
   const { id } = useParams();
@@ -31,9 +30,11 @@ export default function TripDocument() {
   }, [id]);
 
   const handlePrint = () => {
-    // Server-generated PDF keeps the exact 3-page layout (browser print
-    // mangles the template's fixed-pixel pages).
-    window.open(`https://base44.app/api/apps/${appParams.appId}/functions/manifestPdf?trip_id=${id}`, "_blank");
+    const win = iframeRef.current?.contentWindow;
+    if (win) {
+      win.focus();
+      win.print();
+    }
   };
 
   if (!html) {
