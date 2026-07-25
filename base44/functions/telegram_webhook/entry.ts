@@ -28,13 +28,6 @@ async function sendTelegramMessage(token, chatId, text, extra) {
   });
 }
 
-async function sendTelegramDocument(token, chatId, bytes, filename) {
-  const form = new FormData();
-  form.append("chat_id", chatId);
-  form.append("document", new Blob([bytes], { type: "application/pdf" }), filename);
-  await fetch(`${TG_API}${token}/sendDocument`, { method: "POST", body: form });
-}
-
 async function getTelegramFilePath(token, fileId) {
   const res = await fetch(`${TG_API}${token}/getFile?file_id=${fileId}`);
   const data = await res.json();
@@ -81,7 +74,6 @@ Deno.serve(async (req) => {
     }
 
     const sendMessage = (text, extra) => sendTelegramMessage(token, chatId, text, extra);
-    const sendDocument = (bytes, filename) => sendTelegramDocument(token, chatId, bytes, filename);
 
     if (callback) {
       await fetch(`${TG_API}${token}/answerCallbackQuery`, {
@@ -89,9 +81,9 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callback_query_id: callback.id })
       });
-      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl, sendDocument);
+      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl);
     } else if (message.text) {
-      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl, sendDocument);
+      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl);
     } else if (message.photo) {
       const photos = message.photo;
       const largest = photos[photos.length - 1];
