@@ -35,9 +35,9 @@ const P3_HEADER_COLS = {
   time: [54.0, 195.4]
 };
 
-function cell(col, bottom, text, fontSize) {
+function cell(col, bottom, text, fontSize, align) {
   return `<div class="b44-cell" style="position:absolute;left:${col[0]}px;bottom:${bottom}px;width:${col[1]}px;` +
-    `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${fontSize}px;color:#000;z-index:9">${text}</div>`;
+    `text-align:${align || "center"};font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${fontSize}px;color:#000;z-index:9">${text}</div>`;
 }
 
 export function buildFromAwtarTemplate(templateHtml, trip) {
@@ -66,10 +66,17 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
 
   // ---- Page 3 (inspection) header cells ----
   let p3Cells = "";
-  p3Cells += cell(P3_HEADER_COLS.driver, P3_HEADER_BOTTOM, esc(d1.name || ""), 14);
+  p3Cells += cell(P3_HEADER_COLS.driver, P3_HEADER_BOTTOM, esc(d1.name || ""), 11);
   p3Cells += cell(P3_HEADER_COLS.plate, P3_HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
   p3Cells += cell(P3_HEADER_COLS.date, P3_HEADER_BOTTOM, date, 13);
   p3Cells += cell(P3_HEADER_COLS.time, P3_HEADER_BOTTOM, time, 13);
+
+  // ---- Page 3: bottom "إسم السائق" (Driver Name) signature field ----
+  // The dotted name line sits at ~cssBottom 301; label is on the right.
+  // Name is placed on the dotted line, right-aligned to end near the label.
+  const P3_SIG_NAME_BOTTOM = 301;
+  const P3_SIG_NAME_COL = [80, 530];
+  p3Cells += cell(P3_SIG_NAME_COL, P3_SIG_NAME_BOTTOM, esc(d1.name || ""), 13, "right");
 
   // inject page-specific cells into each page's content container
   let html = templateHtml;

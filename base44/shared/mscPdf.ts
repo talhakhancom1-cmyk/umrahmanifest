@@ -138,8 +138,12 @@ export async function buildPdfFromMscHtml(html) {
         const bottom = parseFloat((style.match(/bottom:(-?[0-9.]+)px/) || [])[1] || "0");
         const width = parseFloat((style.match(/width:(-?[0-9.]+)px/) || [])[1] || "0");
         const size = parseFloat((style.match(/font-size:(-?[0-9.]+)px/) || [])[1] || "13");
+        const align = (style.match(/text-align:(left|right|center)/) || [])[1] || "center";
         const tw = font.widthOfTextAtSize(text, size);
-        page.drawText(text, { x: left + (width - tw) / 2, y: bottom + size * 0.21, size, font, color: rgb(0, 0, 0) });
+        const x = align === "right" ? left + width - tw
+                : align === "left" ? left
+                : left + (width - tw) / 2;
+        page.drawText(text, { x, y: bottom + size * 0.21, size, font, color: rgb(0, 0, 0) });
       } else {
         stack.push(null);
       }
