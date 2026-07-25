@@ -121,6 +121,9 @@ export function buildFromSaudTemplate(templateHtml, trip) {
     p2 = p2.replace(/(<div class="pc[^"]*">)/, `$1${extraCells}`);
   }
 
+  // ---- Fix Arabic header typo: الجنسيه → الجنسية ----
+  p2 = p2.split("الجنسيه").join("الجنسية");
+
   // ---- CSS overrides ----
   const extraCss = `
 <style>
