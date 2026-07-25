@@ -133,16 +133,14 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
     state: "awaiting_route"
   });
   await sendMessage(
-    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n3️⃣ Riyadh → Makkah\n4️⃣ Riyadh → Madinah\n\nTap a button or reply with a number.`,
+    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n1️⃣ Madinah → Makkah\n2️⃣ Makkah → Madinah\n\nTap a button or reply with 1 or 2.`,
     {
       markdown: true,
       inline: [
         [{ text: "🕌 Madinah  →  🕋 Makkah", data: "1" }],
-        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }],
-        [{ text: "🏙️ Riyadh  →  🕋 Makkah", data: "3" }],
-        [{ text: "🏙️ Riyadh  →  🕌 Madinah", data: "4" }]
+        [{ text: "🕋 Makkah  →  🕌 Madinah", data: "2" }]
       ],
-      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah", "3. Riyadh → Makkah", "4. Riyadh → Madinah"]
+      keyboard: ["1. Madinah → Makkah", "2. Makkah → Madinah"]
     }
   );
 }
@@ -156,14 +154,8 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
   } else if (num === "2") {
     routeFrom = "Makkah";
     routeTo = "Madina";
-  } else if (num === "3") {
-    routeFrom = "Riyadh";
-    routeTo = "Makkah";
-  } else if (num === "4") {
-    routeFrom = "Riyadh";
-    routeTo = "Madina";
   } else {
-    await sendMessage("Please reply with 1, 2, 3 or 4.");
+    await sendMessage("Please reply with 1 or 2.");
     return;
   }
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
@@ -233,20 +225,16 @@ async function handleCompanySelection(base44, sessionEntityName, session, text, 
 }
 
 async function askDriver(base44, sessionEntityName, session, sendMessage, sendDocument) {
-  // Saved driver profiles for this company (or unassigned), then fallback to recent trips
-  const companyId = session.company_id;
-  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 20);
-  let drivers = saved
-    .filter((d) => !d.company_id || d.company_id === companyId)
-    .slice(0, 8)
-    .map((d) => ({
-      name: d.name,
-      iqama_no: d.iqama_no || "",
-      name2: d.name2 || "",
-      iqama_no2: d.iqama_no2 || "",
-      vehicle_plate: d.vehicle_plate || "",
-      car_model: d.car_model || ""
-    }));
+  // Saved driver profiles first
+  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 8);
+  let drivers = saved.map((d) => ({
+    name: d.name,
+    iqama_no: d.iqama_no || "",
+    name2: d.name2 || "",
+    iqama_no2: d.iqama_no2 || "",
+    vehicle_plate: d.vehicle_plate || "",
+    car_model: d.car_model || ""
+  }));
 
   if (!drivers.length) {
     // Fall back to drivers used on recent trips
@@ -327,6 +315,17 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, sen
 
   const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
   await sendMessage(`✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}\n\n📥 Direct PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
+
+  if (sendDocument) {
+    try {
+      const html = await buildManifestDoc(trip);
+      const pdfBytes = await buildPdfFromMscHtml(html);
+      const fileName = `${(trip.trip_name || "manifest").replace(/[^\w\- ]+/g, "").slice(0, 60) || "manifest"}.pdf`;
+      await sendDocument(pdfBytes, fileName);
+    } catch (e) {
+      await sendMessage(`⚠️ Couldn't attach the PDF (${e.message}) — use the download link above.`);
+    }
+  }
 
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "done",

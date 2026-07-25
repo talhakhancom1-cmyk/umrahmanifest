@@ -25,17 +25,6 @@ const COLS = {
   nat: [141, 158]
 };
 
-// Page 3 (inspection log) geometry: header row + driver-name declaration line
-const P3_ROW_BOTTOM = 896;
-const P3_COLS = {
-  driver: [641, 190],
-  plate: [446, 190],
-  date: [251, 190],
-  time: [56, 190]
-};
-const P3_SIGN_NAME = [520, 250]; // next to "إسم السائق :" at the bottom
-const P3_SIGN_BOTTOM = 134;
-
 function cell(col, bottom, text, fontSize) {
   return `<div class="b44-cell" style="position:absolute;left:${col[0]}px;bottom:${bottom}px;width:${col[1]}px;` +
     `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${fontSize}px;color:#000;z-index:9">${text}</div>`;
@@ -51,39 +40,27 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
   const passengers = t.passengers || [];
 
   let cells = "";
-  cells += cell(HEADER_COLS.driver, HEADER_BOTTOM + 1, esc(d1.name || ""), 11);
-  cells += cell(HEADER_COLS.plate, HEADER_BOTTOM + 1, esc(t.vehicle_plate || ""), 11);
-  cells += cell(HEADER_COLS.dest, HEADER_BOTTOM + 1, from && to ? `${from} TO ${to}` : "", 10);
-  cells += cell(HEADER_COLS.date, HEADER_BOTTOM + 1, `${date}${time ? " " + time : ""}`, 10);
+  cells += cell(HEADER_COLS.driver, HEADER_BOTTOM, esc(d1.name || ""), 14);
+  cells += cell(HEADER_COLS.plate, HEADER_BOTTOM, esc(t.vehicle_plate || ""), 14);
+  cells += cell(HEADER_COLS.dest, HEADER_BOTTOM, from && to ? `${from} TO ${to}` : "", 13);
+  cells += cell(HEADER_COLS.date, HEADER_BOTTOM, `${date}${time ? " " + time : ""}`, 13);
 
   for (let i = 0; i < Math.min(passengers.length, MAX_ROWS); i++) {
     const p = passengers[i] || {};
-    const bottom = ROW1_BOTTOM + 2.5 - i * ROW_STEP;
-    cells += cell(COLS.name, bottom, esc(p.name || ""), 11);
-    cells += cell(COLS.id, bottom, esc(p.id_number || ""), 11);
-    cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 11);
+    const bottom = ROW1_BOTTOM - i * ROW_STEP;
+    cells += cell(COLS.name, bottom, esc(p.name || ""), 13);
+    cells += cell(COLS.id, bottom, esc(p.id_number || ""), 13);
+    cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 13);
   }
 
-  // page 3: inspection log header row + driver declaration line
-  let cells3 = "";
-  cells3 += cell(P3_COLS.driver, P3_ROW_BOTTOM, esc(d1.name || ""), 11);
-  cells3 += cell(P3_COLS.plate, P3_ROW_BOTTOM, esc(t.vehicle_plate || ""), 11);
-  cells3 += cell(P3_COLS.date, P3_ROW_BOTTOM, date, 11);
-  cells3 += cell(P3_COLS.time, P3_ROW_BOTTOM, time, 11);
-  cells3 += cell(P3_SIGN_NAME, P3_SIGN_BOTTOM, esc(d1.name || ""), 12);
-
-  // inject the cells into each page's content container
+  // inject the cells into page 2's content container
   let html = templateHtml;
-  const inject = (pageId, pageCells) => {
-    const idx = html.indexOf(`<div id="${pageId}"`);
-    if (idx >= 0) {
-      const before = html.slice(0, idx);
-      const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${pageCells}`);
-      html = before + after;
-    }
-  };
-  inject("pf2", cells);
-  inject("pf3", cells3);
+  const idx = html.indexOf('<div id="pf2"');
+  if (idx >= 0) {
+    const before = html.slice(0, idx);
+    const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${cells}`);
+    html = before + after;
+  }
 
   const extraCss = `
 <style>
