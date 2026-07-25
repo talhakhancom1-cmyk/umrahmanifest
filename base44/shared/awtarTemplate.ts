@@ -74,7 +74,7 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
   // ---- Page 3: bottom "إسم السائق" (Driver Name) signature field ----
   // The dotted name line sits at ~cssBottom 301; label is on the right.
   // Name is placed on the dotted line, right-aligned to end near the label.
-  const P3_SIG_NAME_BOTTOM = 301;
+  const P3_SIG_NAME_BOTTOM = 308;
   const P3_SIG_NAME_COL = [80, 530];
   p3Cells += cell(P3_SIG_NAME_COL, P3_SIG_NAME_BOTTOM, esc(d1.name || ""), 13, "right");
 
