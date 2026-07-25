@@ -23,7 +23,7 @@ export function esc(s) {
 // Rewrites the inner content of pdf2htmlEX text divs whose plain text matches a rule.
 // Rules may return a string, or {text, center: true} to re-center the value inside
 // its table cell (the text layer uses transform:scale(0.375), so 100%/0.375 ≈ 266.667%).
-function replaceTDivs(pageHtml, rules) {
+export function replaceTDivs(pageHtml, rules) {
   return pageHtml.replace(/(<div class="t [^"]+">)([\s\S]*?)(<\/div>)/g, (m, open, inner, close) => {
     const plain = inner.replace(/<[^>]+>/g, "").replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
     for (const rule of rules) {
@@ -41,7 +41,7 @@ function replaceTDivs(pageHtml, rules) {
   });
 }
 
-function centered(text) {
+export function centered(text) {
   return { text, center: true };
 }
 
