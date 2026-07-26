@@ -24,7 +24,8 @@
         "Madina",
         "Makkah",
         "Riyadh",
-        "Dammam"
+        "Dammam",
+        "Jeddah"
       ]
     },
     "route_to": {
@@ -33,7 +34,8 @@
         "Madina",
         "Makkah",
         "Riyadh",
-        "Dammam"
+        "Dammam",
+        "Jeddah"
       ]
     },
     "travel_date": {

@@ -22,8 +22,7 @@ const MAX_ROWS = 25;
 const COLS = {
   name: [437, 281],
   id: [303, 131],
-  nat: [141, 158],
-  gender: [141, 158]
+  nat: [141, 158]
 };
 
 // Page 3 (inspection) header cells — measured from the template's background image.
@@ -62,7 +61,7 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
     const bottom = ROW1_BOTTOM - i * ROW_STEP;
     p2Cells += cell(COLS.name, bottom, esc(p.name || ""), 13);
     p2Cells += cell(COLS.id, bottom, esc(p.id_number || ""), 13);
-    p2Cells += cell(COLS.gender, bottom, esc(p.gender || ""), 13);
+    p2Cells += cell(COLS.nat, bottom, esc(p.nationality || ""), 13);
   }
 
   // ---- Page 3 (inspection) header cells ----
