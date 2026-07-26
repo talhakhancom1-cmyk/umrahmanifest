@@ -12,7 +12,9 @@
         "Makkah",
         "Riyadh",
         "Dammam",
-        "Jeddah"
+        "Jeddah",
+        "Zalim",
+        "Tayab"
       ]
     },
     "route_to": {
@@ -22,7 +24,9 @@
         "Makkah",
         "Riyadh",
         "Dammam",
-        "Jeddah"
+        "Jeddah",
+        "Zalim",
+        "Tayab"
       ]
     },
     "travel_date": {
