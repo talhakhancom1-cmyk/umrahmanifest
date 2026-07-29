@@ -184,6 +184,7 @@ export default function TripWorkspace() {
                 <SelectItem value="Tayab">Tayab</SelectItem>
                 <SelectItem value="Al_Qasim">Al Qasim</SelectItem>
                 <SelectItem value="Ramazia">Ramazia</SelectItem>
+                <SelectItem value="Al_Hanakiyyah">Al Hanakiyyah</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -206,6 +207,7 @@ export default function TripWorkspace() {
                 <SelectItem value="Tayab">Tayab</SelectItem>
                 <SelectItem value="Al_Qasim">Al Qasim</SelectItem>
                 <SelectItem value="Ramazia">Ramazia</SelectItem>
+                <SelectItem value="Al_Hanakiyyah">Al Hanakiyyah</SelectItem>
               </SelectContent>
             </Select>
           </div>
