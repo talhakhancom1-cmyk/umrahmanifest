@@ -1,6 +1,6 @@
 import { uploadImageBuffer, processPassengerPhoto, createTripFromTemplate } from "./tripUtils.ts";
 
-export async function handleTextUpdate(base44, sessionEntityName, session, text, sendMessage, appUrl) {
+export async function handleTextUpdate(base44, sessionEntityName, session, text, sendMessage, appUrl, appId, sendDocument) {
   const lowerText = text.toLowerCase().trim();
 
   if (lowerText === "cancel" || lowerText === "الغاء" || lowerText === "إلغاء") {
@@ -23,9 +23,9 @@ export async function handleTextUpdate(base44, sessionEntityName, session, text,
   } else if (session.state === "awaiting_datetime") {
     await handleDateTime(base44, sessionEntityName, session, text.trim(), sendMessage);
   } else if (session.state === "awaiting_company") {
-    await handleCompanySelection(base44, sessionEntityName, session, text.trim(), sendMessage);
+    await handleCompanySelection(base44, sessionEntityName, session, text.trim(), sendMessage, appId, sendDocument);
   } else if (session.state === "awaiting_driver") {
-    await handleDriverSelection(base44, sessionEntityName, session, text.trim(), sendMessage);
+    await handleDriverSelection(base44, sessionEntityName, session, text.trim(), sendMessage, appId, sendDocument);
   }
 }
 
@@ -249,7 +249,7 @@ async function askCompany(base44, sessionEntityName, session, sendMessage) {
   });
 }
 
-async function handleCompanySelection(base44, sessionEntityName, session, text, sendMessage) {
+async function handleCompanySelection(base44, sessionEntityName, session, text, sendMessage, appId, sendDocument) {
   const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
   const ids = session.company_menu || [];
   if (!num || num < 1 || num > ids.length) {
@@ -261,10 +261,10 @@ async function handleCompanySelection(base44, sessionEntityName, session, text, 
     company_id: companyId
   });
   const updatedSession = { ...session, company_id: companyId };
-  await askDriver(base44, sessionEntityName, updatedSession, sendMessage);
+  await askDriver(base44, sessionEntityName, updatedSession, sendMessage, appId, sendDocument);
 }
 
-async function askDriver(base44, sessionEntityName, session, sendMessage) {
+async function askDriver(base44, sessionEntityName, session, sendMessage, appId, sendDocument) {
   // Saved driver profiles first
   const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 8);
   let drivers = saved.map((d) => ({
@@ -302,7 +302,7 @@ async function askDriver(base44, sessionEntityName, session, sendMessage) {
 
   if (!drivers.length) {
     // No known drivers — finalize without one
-    await finalizeTrip(base44, sessionEntityName, session, sendMessage);
+    await finalizeTrip(base44, sessionEntityName, session, sendMessage, appId, sendDocument);
     return;
   }
 
@@ -323,10 +323,10 @@ async function askDriver(base44, sessionEntityName, session, sendMessage) {
   });
 }
 
-async function handleDriverSelection(base44, sessionEntityName, session, text, sendMessage) {
+async function handleDriverSelection(base44, sessionEntityName, session, text, sendMessage, appId, sendDocument) {
   const lower = text.toLowerCase();
   if (lower === "skip" || lower === "تخطي") {
-    await finalizeTrip(base44, sessionEntityName, session, sendMessage);
+    await finalizeTrip(base44, sessionEntityName, session, sendMessage, appId, sendDocument);
     return;
   }
   const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
@@ -338,10 +338,10 @@ async function handleDriverSelection(base44, sessionEntityName, session, text, s
   const driver = drivers[num - 1];
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, { driver });
   const updatedSession = { ...session, driver };
-  await finalizeTrip(base44, sessionEntityName, updatedSession, sendMessage);
+  await finalizeTrip(base44, sessionEntityName, updatedSession, sendMessage, appId, sendDocument);
 }
 
-async function finalizeTrip(base44, sessionEntityName, session, sendMessage) {
+async function finalizeTrip(base44, sessionEntityName, session, sendMessage, appId, sendDocument) {
   const result = await createTripFromTemplate(base44, session);
   if (!result) {
     await sendMessage("⚠️ No company template configured. Please add one in the app Settings page first.");
@@ -349,12 +349,22 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage) {
   }
 
   const { trip, company } = result;
-  const appId = Deno.env.get("BASE44_APP_ID");
   const docUrl = `https://base44.app/api/apps/${appId}/functions/manifestView?trip_id=${trip.id}`;
   const pdfUrl = `https://base44.app/api/apps/${appId}/functions/manifestPdf?trip_id=${trip.id}`;
 
   const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
-  await sendMessage(`✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}\n\n📥 Direct PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
+  const summary = `✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}`;
+  const filename = (trip.trip_name || "manifest").replace(/[^\w\- ]+/g, "").slice(0, 60) || "manifest";
+
+  if (sendDocument) {
+    try {
+      await sendDocument(pdfUrl, `${filename}.pdf`, summary);
+    } catch (e) {
+      await sendMessage(`${summary}\n\n📥 PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}`);
+    }
+  } else {
+    await sendMessage(`${summary}\n\n📥 Direct PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
+  }
 
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "done",

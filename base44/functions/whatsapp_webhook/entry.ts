@@ -57,10 +57,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    const appId = new URL(req.url).pathname.match(/\/api\/apps\/([^/]+)\/functions/)?.[1] || "";
+
     const sendMessage = (text) => sendWhatsAppMessage(phone_number_id, access_token, from, text);
 
     if (type === "text") {
-      await handleTextUpdate(base44, "WhatsAppSession", session, message.text.body, sendMessage, app_url);
+      await handleTextUpdate(base44, "WhatsAppSession", session, message.text.body, sendMessage, app_url, appId);
     } else if (type === "image") {
       const mediaId = message.image.id;
       const photoDownloader = async () => {

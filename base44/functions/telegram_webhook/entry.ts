@@ -73,7 +73,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    const appId = new URL(req.url).pathname.match(/\/api\/apps\/([^/]+)\/functions/)?.[1] || "";
+
     const sendMessage = (text, extra) => sendTelegramMessage(token, chatId, text, extra);
+
+    // Send the rendered manifest PDF as a Telegram document so the full
+    // document (incl. Arabic, which lives in the page background images) is
+    // delivered directly in the chat instead of only a link.
+    const sendDocument = async (pdfUrl, filename, caption) => {
+      const pdfRes = await fetch(pdfUrl);
+      if (!pdfRes.ok) throw new Error(`PDF fetch failed: ${pdfRes.status}`);
+      const pdfBuf = await pdfRes.arrayBuffer();
+      const fd = new FormData();
+      fd.append("chat_id", chatId);
+      fd.append("document", new Blob([pdfBuf]), filename);
+      if (caption) fd.append("caption", caption.slice(0, 1024));
+      const tgRes = await fetch(`${TG_API}${token}/sendDocument`, { method: "POST", body: fd });
+      if (!tgRes.ok) throw new Error(`Telegram sendDocument failed: ${tgRes.status}`);
+    };
 
     if (callback) {
       await fetch(`${TG_API}${token}/answerCallbackQuery`, {
@@ -81,9 +98,9 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callback_query_id: callback.id })
       });
-      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl);
+      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl, appId, sendDocument);
     } else if (message.text) {
-      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl);
+      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl, appId, sendDocument);
     } else if (message.photo) {
       const photos = message.photo;
       const largest = photos[photos.length - 1];
