@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
 import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
-import { buildPdfFromMscHtml } from '../../shared/mscPdf.ts';
+import { buildPdfFromMscHtml, diagnoseFonts } from '../../shared/mscPdf.ts';
 
 // Direct PDF download: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
@@ -17,6 +17,12 @@ Deno.serve(async (req) => {
     if (!trip) return new Response('Not found', { status: 404 });
 
     const html = await buildManifestDoc(trip);
+
+    if (url.searchParams.get('debug') === 'fonts') {
+      const diag = await diagnoseFonts(html);
+      return Response.json(diag);
+    }
+
     const pdfBytes = await buildPdfFromMscHtml(html);
     const name = (trip.trip_name || 'manifest').replace(/[^\w\- ]+/g, '').slice(0, 60) || 'manifest';
 
