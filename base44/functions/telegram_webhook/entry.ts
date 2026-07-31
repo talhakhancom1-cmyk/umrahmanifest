@@ -73,7 +73,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const appId = new URL(req.url).pathname.match(/\/api\/apps\/([^/]+)\/functions/)?.[1] || "";
+    // Build the function base URL from the app id env var (the same one used to
+    // register this webhook). Parsing req.url inside the function runtime is
+    // unreliable and previously produced an empty app id, which made the
+    // manifest links 404.
+    const fnBase = `https://base44.app/api/apps/${Deno.env.get("BASE44_APP_ID")}/functions`;
 
     const sendMessage = (text, extra) => sendTelegramMessage(token, chatId, text, extra);
 
@@ -98,9 +102,9 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callback_query_id: callback.id })
       });
-      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl, appId, sendDocument);
+      await handleTextUpdate(base44, "TelegramSession", session, String(callback.data || ""), sendMessage, appUrl, fnBase, sendDocument);
     } else if (message.text) {
-      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl, appId, sendDocument);
+      await handleTextUpdate(base44, "TelegramSession", session, message.text, sendMessage, appUrl, fnBase, sendDocument);
     } else if (message.photo) {
       const photos = message.photo;
       const largest = photos[photos.length - 1];

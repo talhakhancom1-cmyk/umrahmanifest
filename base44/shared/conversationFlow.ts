@@ -353,8 +353,10 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, app
   }
 
   const { trip, company } = result;
-  const docUrl = `https://base44.app/api/apps/${appId}/functions/manifestView?trip_id=${trip.id}`;
-  const pdfUrl = `https://base44.app/api/apps/${appId}/functions/manifestPdf?trip_id=${trip.id}`;
+  // appId passed from the webhook is the full function base URL
+  // (https://base44.app/api/apps/{id}/functions), so links work on any host.
+  const docUrl = `${appId}/manifestView?trip_id=${trip.id}`;
+  const pdfUrl = `${appId}/manifestPdf?trip_id=${trip.id}`;
 
   const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
   const summary = `✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}`;

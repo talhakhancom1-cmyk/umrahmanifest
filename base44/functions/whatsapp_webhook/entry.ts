@@ -57,12 +57,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const appId = new URL(req.url).pathname.match(/\/api\/apps\/([^/]+)\/functions/)?.[1] || "";
+    // Build the function base URL from the app id env var (parsing req.url
+    // inside the function runtime is unreliable and produced empty ids).
+    const fnBase = `https://base44.app/api/apps/${Deno.env.get("BASE44_APP_ID")}/functions`;
 
     const sendMessage = (text) => sendWhatsAppMessage(phone_number_id, access_token, from, text);
 
     if (type === "text") {
-      await handleTextUpdate(base44, "WhatsAppSession", session, message.text.body, sendMessage, app_url, appId);
+      await handleTextUpdate(base44, "WhatsAppSession", session, message.text.body, sendMessage, app_url, fnBase);
     } else if (type === "image") {
       const mediaId = message.image.id;
       const photoDownloader = async () => {
