@@ -102,7 +102,13 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
+  #page-container{position:static!important;left:0!important;top:0!important;transform:none!important}
+  .pc{position:relative!important;left:0!important;top:0!important;margin:0!important;page-break-after:always;break-after:page}
+  .pc:last-child{page-break-after:auto!important}
+}
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
