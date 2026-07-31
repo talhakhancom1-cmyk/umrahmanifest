@@ -53,17 +53,17 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
 
   let natIdx = 0;
   p2 = replaceTDivs(p2, [
-    (s) => s === SAMPLE_DATE ? centered(`${date}${time ? " " + time : ""}`) : null,
+    (s) => s === SAMPLE_DATE ? `${date}${time ? " " + time : ""}` : null,
     (s) => {
       const i = SAMPLE_NAMES.indexOf(s);
-      return i >= 0 ? centered(pax(i, "name")) : null;
+      return i >= 0 ? pax(i, "name") : null;
     },
     (s) => {
       const i = SAMPLE_IDS.indexOf(s);
-      return i >= 0 ? centered(pax(i, "id_number")) : null;
+      return i >= 0 ? pax(i, "id_number") : null;
     },
     (s) => {
-      if (NAT_SAMPLES.indexOf(s) >= 0) return centered(pax(natIdx++, "nationality"));
+      if (NAT_SAMPLES.indexOf(s) >= 0) return pax(natIdx++, "nationality");
       return null;
     }
   ]);
@@ -72,7 +72,7 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
   p3 = p3.split("MADINA").join("\u0001FROM\u0001").split("MAKKAH").join("\u0001TO\u0001");
   p3 = p3.split("\u0001FROM\u0001").join(from).split("\u0001TO\u0001").join(to);
   p3 = replaceTDivs(p3, [
-    (s) => s.includes(SAMPLE_P3_DATE) ? centered(`${date}${time ? " " + time : ""}`) : null
+    (s) => s.includes(SAMPLE_P3_DATE) ? `${date}${time ? " " + time : ""}` : null
   ]);
 
   // ---- CSS overrides ----
