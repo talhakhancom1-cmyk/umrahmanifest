@@ -72,24 +72,50 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
   // The top route may sit on page 1 or 2 — run it everywhere to be safe.
   p1 = replaceTDivs(p1, [routeReplacer]);
 
-  let natIdx = 0;
+  // The template's passenger text layer is irregular — nationalities sit in two
+  // different columns, the first row's name is merged into "PAKISTANSABIR", and
+  // the nationality/name/id columns aren't aligned by index. So blank every
+  // sample passenger cell and overlay a clean grid cloned from the template's
+  // own row-1 cells (nationality / id / name), so columns line up exactly.
+  const PAX_SAMPLES = [
+    ...SAMPLE_NAMES, ...SAMPLE_IDS, ...NAT_SAMPLES, "PAKISTANSABIR"
+  ];
   p2 = replaceTDivs(p2, [
     routeReplacer,
     (s) => s === SAMPLE_DATE ? dateTime : null,
     (s) => s === SAMPLE_P2_FOOTER_DATE ? dateTimeNum : null,
-    (s) => {
-      const i = SAMPLE_NAMES.indexOf(s);
-      return i >= 0 ? pax(i, "name") : null;
-    },
-    (s) => {
-      const i = SAMPLE_IDS.indexOf(s);
-      return i >= 0 ? pax(i, "id_number") : null;
-    },
-    (s) => {
-      if (NAT_SAMPLES.indexOf(s) >= 0) return pax(natIdx++, "nationality");
-      return null;
-    }
+    (s) => PAX_SAMPLES.indexOf(s) >= 0 ? "" : null
   ]);
+
+  // Row bottoms (px) for manifest rows 1..14, measured from the template's own
+  // row-number cells. Column container + text classes cloned from the row-1
+  // sample cells so added rows share the template's exact typography/position.
+  const ROW_BOTTOM = {
+    1: 846.105, 2: 812.085, 3: 774.645, 4: 741.345, 5: 707.325, 6: 673.845,
+    7: 639.825, 8: 602.565, 9: 575.175, 10: 541.875, 11: 508.395, 12: 474.375,
+    13: 440.535, 14: 406.515
+  };
+  const COL = {
+    nat:  { c: "c x58 y8c w22 h30", t: "t m0 x5c h22 y8d ff6 fs1 fc0 sc0 ls0 ws0" },
+    id:   { c: "c x59 y8c w23 h30", t: "t m0 x30 h22 y8d ff6 fs1 fc0 sc0 lsb ws0" },
+    name: { c: "c x5a y8c w24 h30", t: "t m0 x5d h22 y8d ff6 fs1 fc0 sc0 ls0 ws0" }
+  };
+  const mkCell = (col, bottom, text) =>
+    `<div class="${col.c}" style="bottom:${bottom}px;z-index:9">` +
+    `<div class="${col.t}">${text}</div></div>`;
+
+  let overlay = "";
+  for (let i = 0; i < passengers.length && i < 14; i++) {
+    const b = ROW_BOTTOM[i + 1];
+    if (b === undefined) break;
+    overlay += mkCell(COL.nat, b, pax(i, "nationality"));
+    overlay += mkCell(COL.id, b, pax(i, "id_number"));
+    overlay += mkCell(COL.name, b, pax(i, "name"));
+  }
+  if (overlay) {
+    p2 = p2.split('<div class="pc pc2 w0 h0">')
+      .join('<div class="pc pc2 w0 h0">' + overlay);
+  }
 
   // ---- Page 3 (inspection): route + date (numeric, underscores) ----
   p3 = replaceTDivs(p3, [
