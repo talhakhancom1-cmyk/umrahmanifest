@@ -53,10 +53,7 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
 
   let natIdx = 0;
   p2 = replaceTDivs(p2, [
-    (s) => s === SAMPLE_DRIVER ? centered(esc(d1.name || "")) : null,
-    (s) => s === SAMPLE_IQAMA ? centered(esc(d1.iqama_no || "")) : null,
-    (s) => s === SAMPLE_DATE ? centered(date) : null,
-    (s) => s === SAMPLE_PLATE ? centered(esc(t.vehicle_plate || "")) : null,
+    (s) => s === SAMPLE_DATE ? centered(`${date}${time ? " " + time : ""}`) : null,
     (s) => {
       const i = SAMPLE_NAMES.indexOf(s);
       return i >= 0 ? centered(pax(i, "name")) : null;
@@ -71,12 +68,11 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
     }
   ]);
 
-  // ---- Page 3 (inspection): route + date + driver ----
+  // ---- Page 3 (inspection): route + date ----
   p3 = p3.split("MADINA").join("\u0001FROM\u0001").split("MAKKAH").join("\u0001TO\u0001");
   p3 = p3.split("\u0001FROM\u0001").join(from).split("\u0001TO\u0001").join(to);
   p3 = replaceTDivs(p3, [
-    (s) => s.includes(SAMPLE_P3_DATE) ? centered(date) : null,
-    (s) => s === SAMPLE_DRIVER ? centered(esc(d1.name || "")) : null
+    (s) => s.includes(SAMPLE_P3_DATE) ? centered(`${date}${time ? " " + time : ""}`) : null
   ]);
 
   // ---- CSS overrides ----
