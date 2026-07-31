@@ -381,6 +381,17 @@ export async function buildPdfFromMscHtml(html) {
     transparent.add(cls);
     return m;
   });
+  // pdf2htmlEX positions glyphs via invisible spacer spans `<span class="_ _N">`
+  // whose CSS sets width (advance) or margin-left (kerning, often negative for
+  // RTL flow). Values are in the div's unscaled px; multiply by the div's `m`
+  // matrix scale to get rendered px.
+  const spanCss = {};
+  head.replace(/\.(_[0-9]+)\{([^}]+)\}/g, (m, cls, body) => {
+    const w = body.match(/width:([-\d.]+)px/);
+    const ml = body.match(/margin-left:([-\d.]+)px/);
+    spanCss[cls] = { width: w ? parseFloat(w[1]) : 0, marginLeft: ml ? parseFloat(ml[1]) : 0 };
+    return m;
+  });
 
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
@@ -504,24 +515,40 @@ export async function buildPdfFromMscHtml(html) {
           // Draw each PUA glyph as a vector path. fontkit's encodeText cannot
           // resolve these (mostly supplementary PUA) codepoints, so we map each
           // codepoint to its glyph id ourselves (gidMap) and draw the glyph's
-          // outline via pdf-lib's drawSvgPath, advancing by the glyph width.
+          // outline via pdf-lib's drawSvgPath. Glyph positions come from the
+          // template's invisible spacer spans (width/margin-left) — NOT advance
+          // width — so cursive glyphs join exactly as in the original layout.
           if (!entry || !entry.fkFont) continue;
           const { fkFont, gidMap, upm } = entry;
           const gScale = size / upm;
           let cx = baseLeft + tLeft;
-          for (const ch of text) {
-            const cp = ch.codePointAt(0);
-            if (cp === 32) { cx += size * 0.25; continue; }
-            const gid = gidMap.get(cp);
-            if (gid == null) { cx += size * 0.2; continue; }
-            try {
-              const glyph = fkFont.getGlyph(gid);
-              // Pre-negate y so pdf-lib's drawSvgPath (which flips y for SVG) draws
-              // the fontkit (y-up) glyph upright; place the path's baseline at y.
-              const svg = negateSvgY(glyph.path.toSVG());
-              page.drawSvgPath(svg, { x: cx, y, scale: gScale, color });
-              cx += (glyph.advanceWidth || upm * 0.5) * gScale;
-            } catch (e) { cx += size * 0.2; }
+          // walk inner HTML in order: text chunks carry the PUA glyphs, `_` spans
+          // inject the exact inter-glyph spacing; `ffN` spans are spaces in other
+          // fonts.
+          const tokRe = /<span\s+class="([^"]*)"[^>]*>([^<]*)<\/span>|([^<]+)/g;
+          let tk;
+          while ((tk = tokRe.exec(inner))) {
+            if (tk[1] !== undefined) {
+              if (/^_/.test(tk[1])) {
+                const sp = spanCss[tk[1]] || { width: 0, marginLeft: 0 };
+                cx += (sp.width + sp.marginLeft) * scale;
+              } else if (tk[2] && tk[2].trim()) {
+                cx += size * 0.25; // space in a non-PUA font
+              }
+            } else if (tk[3]) {
+              for (const ch of tk[3]) {
+                const cp = ch.codePointAt(0);
+                if (cp === 32) { cx += size * 0.25; continue; }
+                const gid = gidMap.get(cp);
+                if (gid == null) { cx += size * 0.2; continue; }
+                try {
+                  const glyph = fkFont.getGlyph(gid);
+                  const svg = negateSvgY(glyph.path.toSVG());
+                  page.drawSvgPath(svg, { x: cx, y, scale: gScale, color });
+                  cx += (glyph.advanceWidth || upm * 0.5) * gScale;
+                } catch (e) { cx += size * 0.2; }
+              }
+            }
           }
         } else if (/text-align:center/.test(style) && cCtx && cCtx.width) {
           const trimmed = text.trim();
@@ -595,6 +622,17 @@ export async function diagnoseFonts(html) {
       };
       r.encodeE603 = probe(0xE603);   // BMP PUA — should resolve in original cmap
       r.encodeF0209 = probe(0xF0209); // supplementary PUA — expected tofu in original
+      // Measure the first two PUA glyphs of the title div (f0461, f058c):
+      // advanceWidth vs path bbox tells us if gaps come from a wrong advance.
+      const fkFont = fontkit.create(rawSfnt);
+      r.upm = fkFont.unitsPerEm;
+      r.glyphMetrics = [0xf0461, 0xf058c].map((cp) => {
+        const gid = all.get(cp);
+        if (gid == null) return { cp: "0x" + cp.toString(16), gid: null };
+        const g = fkFont.getGlyph(gid);
+        const b = g.path.bbox;
+        return { cp: "0x" + cp.toString(16), gid, advanceWidth: g.advanceWidth, bbox: { xMin: b.minX, yMin: b.minY, xMax: b.maxX, yMax: b.maxY }, w: b.maxX - b.minX };
+      });
     } catch (e) {
       r.error = e.message;
     }
