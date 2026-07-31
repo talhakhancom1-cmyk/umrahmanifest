@@ -7,11 +7,22 @@ import { esc, replaceTDivs, centered, fmtDate } from "./mscTemplate.ts";
 export const ISHRAQ_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/9ae6f6c19_ISHRAQQAFILARAHLAH25A.html";
 
+// Numeric date (DD-MM-YY) used by the template's footer + inspection page
+function fmtDateNum(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return "";
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  return `${dd}-${mm}-${String(date.getFullYear()).slice(-2)}`;
+}
+
 // Sample values baked into the template's text layer
 const SAMPLE_DRIVER = "ISHRAQ ALI HALEEM GUL";
 const SAMPLE_IQAMA = "2306370004";
-const SAMPLE_DATE = "13-Oct-24";
-const SAMPLE_P3_DATE = "25-07-26";
+const SAMPLE_DATE = "13-Oct-24";          // page 2 top header date
+const SAMPLE_P2_FOOTER_DATE = "25-07-26"; // page 2 LOCATION/DATE footer (hyphens)
+const SAMPLE_P3_DATE = "25_07_26";        // page 3 inspection date (underscores)
 const SAMPLE_PLATE = "5621-LSA";
 
 const SAMPLE_NAMES = [
@@ -47,13 +58,25 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
 
   const pax = (i, field) => esc(((passengers[i] || {})[field]) || "");
 
-  // ---- Page 2 (manifest): route via placeholders to avoid city-name collisions ----
-  p2 = p2.split("JEDDAH").join("\u0001FROM\u0001").split("RIYADH").join("\u0001TO\u0001");
-  p2 = p2.split("\u0001FROM\u0001").join(from).split("\u0001TO\u0001").join(to);
+  const dateNum = fmtDateNum(t.travel_date);
+  const dateTime = `${date}${time ? " " + time : ""}`;
+  const dateTimeNum = `${dateNum}${time ? " " + time : ""}`;
+  const dateTimeNumUs = `${dateNum.split("-").join("_")}${time ? " " + time : ""}`;
+
+  // Route text is split across many letter-spans in the pdf2htmlEX layer, so raw
+  // string split/join can't match it. Match the full plain-text route divs instead.
+  const routeReplacer = (s) =>
+    (s === "JEDDAH TO RIYADH" || s === "MADINA TO MAKKAH")
+      ? `${from} TO ${to}` : null;
+
+  // The top route may sit on page 1 or 2 — run it everywhere to be safe.
+  p1 = replaceTDivs(p1, [routeReplacer]);
 
   let natIdx = 0;
   p2 = replaceTDivs(p2, [
-    (s) => s === SAMPLE_DATE ? `${date}${time ? " " + time : ""}` : null,
+    routeReplacer,
+    (s) => s === SAMPLE_DATE ? dateTime : null,
+    (s) => s === SAMPLE_P2_FOOTER_DATE ? dateTimeNum : null,
     (s) => {
       const i = SAMPLE_NAMES.indexOf(s);
       return i >= 0 ? pax(i, "name") : null;
@@ -68,11 +91,10 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
     }
   ]);
 
-  // ---- Page 3 (inspection): route + date ----
-  p3 = p3.split("MADINA").join("\u0001FROM\u0001").split("MAKKAH").join("\u0001TO\u0001");
-  p3 = p3.split("\u0001FROM\u0001").join(from).split("\u0001TO\u0001").join(to);
+  // ---- Page 3 (inspection): route + date (numeric, underscores) ----
   p3 = replaceTDivs(p3, [
-    (s) => s.includes(SAMPLE_P3_DATE) ? `${date}${time ? " " + time : ""}` : null
+    routeReplacer,
+    (s) => s === SAMPLE_P3_DATE ? dateTimeNumUs : null
   ]);
 
   // ---- CSS overrides ----
