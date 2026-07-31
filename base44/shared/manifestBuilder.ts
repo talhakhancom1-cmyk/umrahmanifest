@@ -4,12 +4,14 @@ import { buildFromMscTemplate, MSC_TEMPLATE_URL } from "./mscTemplate.ts";
 import { buildFromAwtarTemplate, AWTAR_TEMPLATE_URL } from "./awtarTemplate.ts";
 import { buildFromSaudTemplate, SAUD_TEMPLATE_URL } from "./saudTemplate.ts";
 import { buildFromJiwahTemplate, JIWAH_TEMPLATE_URL } from "./jiwahTemplate.ts";
+import { buildFromIshraqTemplate, ISHRAQ_TEMPLATE_URL } from "./ishraqTemplate.ts";
 
 const BUILDERS = {
   [MSC_TEMPLATE_URL]: buildFromMscTemplate,
   [AWTAR_TEMPLATE_URL]: buildFromAwtarTemplate,
   [SAUD_TEMPLATE_URL]: buildFromSaudTemplate,
-  [JIWAH_TEMPLATE_URL]: buildFromJiwahTemplate
+  [JIWAH_TEMPLATE_URL]: buildFromJiwahTemplate,
+  [ISHRAQ_TEMPLATE_URL]: buildFromIshraqTemplate
 };
 
 const templateCache = {};
