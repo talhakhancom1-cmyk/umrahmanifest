@@ -162,6 +162,60 @@ function tableChecksum(data) {
 // Decode a WOFF font back to sfnt, rewriting its cmap as a single remapped
 // format-4 subtable. Returns { sfnt, remap } where remap maps original
 // codepoints to the BMP codepoints the embedded font now understands.
+// Decode a WOFF to sfnt WITHOUT rebuilding the cmap (used for analysis only).
+async function rawWoffToSfnt(woff) {
+  const dv = new DataView(woff.buffer, woff.byteOffset, woff.byteLength);
+  const flavor = dv.getUint32(4);
+  const numTables = dv.getUint16(12);
+  const totalSfntSize = dv.getUint32(16);
+  const sfnt = new Uint8Array(totalSfntSize);
+  const sdv = new DataView(sfnt.buffer);
+  sdv.setUint32(0, flavor);
+  sdv.setUint16(4, numTables);
+  let entrySelector = 0, pow = 1;
+  while (pow * 2 <= numTables) { pow *= 2; entrySelector++; }
+  sdv.setUint16(6, pow * 16);
+  sdv.setUint16(8, entrySelector);
+  sdv.setUint16(10, numTables * 16 - pow * 16);
+  const entries = [];
+  for (let i = 0; i < numTables; i++) {
+    const e = 44 + i * 20;
+    const tag = woff.slice(e, e + 4);
+    const off = dv.getUint32(e + 4);
+    const len = dv.getUint32(e + 8);
+    const origLen = dv.getUint32(e + 12);
+    const checksum = dv.getUint32(e + 16);
+    let data = (len === origLen) ? woff.slice(off, off + origLen) : await inflateZlib(woff.slice(off, off + len));
+    entries.push({ tag, checksum, data, origLen });
+  }
+  let dirOff = 12, dataOff = 12 + numTables * 16;
+  for (const en of entries) {
+    for (let j = 0; j < 4; j++) sdv.setUint8(dirOff + j, en.tag[j]);
+    sdv.setUint32(dirOff + 4, en.checksum);
+    sdv.setUint32(dirOff + 8, dataOff);
+    sdv.setUint32(dirOff + 12, en.origLen);
+    dirOff += 16;
+    sfnt.set(en.data, dataOff);
+    dataOff += en.origLen;
+    while (dataOff % 4) dataOff++;
+  }
+  return sfnt;
+}
+
+function extractTable(sfnt, tag) {
+  const numT = (sfnt[4] << 8) | sfnt[5];
+  for (let i = 0; i < numT; i++) {
+    const d = 12 + i * 16;
+    const t = String.fromCharCode(sfnt[d], sfnt[d+1], sfnt[d+2], sfnt[d+3]);
+    if (t === tag) {
+      const off = (sfnt[d+8]<<24)|(sfnt[d+9]<<16)|(sfnt[d+10]<<8)|sfnt[d+11];
+      const len = (sfnt[d+12]<<24)|(sfnt[d+13]<<16)|(sfnt[d+14]<<8)|sfnt[d+15];
+      return sfnt.slice(off, off + len);
+    }
+  }
+  return null;
+}
+
 async function woffToSfnt(woff) {
   const dv = new DataView(woff.buffer, woff.byteOffset, woff.byteLength);
   const flavor = dv.getUint32(4);
@@ -257,6 +311,38 @@ function decodeText(inner) {
 
 // Translate every PUA codepoint in `text` through the font's remap table so it
 // resolves under the embedded font's remapped format-4 cmap.
+// Negate every Y coordinate in an SVG path string. pdf-lib's drawSvgPath treats
+// its input as SVG (y-down) and flips y to PDF (y-up); fontkit glyph paths are
+// already y-up, so pre-negating y makes the net transform identity.
+function negateSvgY(svg) {
+  // Which argument indices (0-based) are Y values, per command letter.
+  const yArgs = { M: [1], L: [1], C: [1, 3, 5], S: [1, 3], Q: [1, 3], T: [1], A: [5], m: [1], l: [1], c: [1, 3, 5], s: [1, 3], q: [1, 3], t: [1], a: [5] };
+  const isYAll = { V: true, v: true };
+  let out = "", cmd = null, argIdx = 0, i = 0;
+  const isNum = (c) => /[\d.eE+\-]/.test(c);
+  while (i < svg.length) {
+    const ch = svg[i];
+    if (/[a-zA-Z]/.test(ch)) { out += ch; cmd = ch; argIdx = 0; i++; continue; }
+    if (ch === "," || ch === " " || ch === "\t" || ch === "\n") { out += ch; i++; continue; }
+    let j = i;
+    if (svg[j] === "-" || svg[j] === "+") j++;
+    while (j < svg.length && isNum(svg[j])) {
+      // a sign after an 'e' is part of the exponent; otherwise stop
+      if ((svg[j] === "-" || svg[j] === "+") && svg[j - 1] !== "e" && svg[j - 1] !== "E") break;
+      j++;
+    }
+    const numStr = svg.slice(i, j);
+    const val = parseFloat(numStr);
+    let negate = false;
+    if (isYAll[cmd]) negate = true;
+    else if (yArgs[cmd] && yArgs[cmd].includes(argIdx)) negate = true;
+    out += negate ? String(-val) : numStr;
+    argIdx++;
+    i = j;
+  }
+  return out;
+}
+
 function remapText(text, remap) {
   if (!remap || !remap.size) return text;
   let out = "";
@@ -312,8 +398,16 @@ export async function buildPdfFromMscHtml(html) {
       if (!fam || !b64) continue;
       try {
         const woff = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        const { sfnt, remap } = await woffToSfnt(woff);
-        fontMap[fam] = { font: await doc.embedFont(sfnt), remap };
+        // Keep the ORIGINAL sfnt (no cmap rebuild — fontkit rejects rebuilt cmaps).
+        // We embed it for metrics, and keep a fontkit Font + codepoint->gid map so
+        // we can draw each PUA glyph's vector path directly (bypassing fontkit's
+        // encodeText, which cannot resolve supplementary PUA codepoints).
+        const rawSfnt = await rawWoffToSfnt(woff);
+        const cmap = extractTable(rawSfnt, "cmap");
+        const gidMap = collectCmapMappings(cmap);
+        const pdfFont = await doc.embedFont(rawSfnt);
+        const fkFont = fontkit.create(rawSfnt);
+        fontMap[fam] = { pdfFont, fkFont, gidMap, upm: fkFont.unitsPerEm || 1000 };
       } catch (e) {
         console.error("font embed failed for", fam, e.message);
       }
@@ -382,20 +476,16 @@ export async function buildPdfFromMscHtml(html) {
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">");
         const hasPua = /[\uE000-\uF8FF]/.test(rawText) || /[\u{F0000}-\u{FFFFD}]/u.test(rawText);
-        let text, drawFont, remap = null;
+        let text, entry = null;
         if (hasPua) {
           text = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
-          // The font family lives on the t-div's OWN class (e.g. "... ff2 ...").
           const ffCls = (cls.match(/\bff([0-9a-z]+)\b/) || [])[1];
           const fam = ffCls ? "ff" + ffCls : null;
-          const entry = fam ? fontMap[fam] : null;
-          drawFont = entry ? entry.font : null;
-          remap = entry ? entry.remap : null;
+          entry = fam ? fontMap[fam] : null;
         } else {
           text = rawText.replace(/[^\x20-\x7E\u00A1-\u00FF]/g, "");
-          drawFont = font;
         }
-        if (!text.trim() || !drawFont) continue;
+        if (!text.trim()) continue;
 
         const scale = scales[tokOf(cls, "m")] ?? 1;
         const size = (css[tokOf(cls, "fs")] ?? 40) * scale;
@@ -411,10 +501,28 @@ export async function buildPdfFromMscHtml(html) {
         const y = (cCtx ? cCtx.bottom : 0) + tBottom + size * 0.21;
 
         if (hasPua) {
-          try {
-            const drawn = remapText(text, remap);
-            page.drawText(drawn, { x: baseLeft + tLeft, y, size, font: drawFont, color });
-          } catch (e) { /* missing glyph — skip this div */ }
+          // Draw each PUA glyph as a vector path. fontkit's encodeText cannot
+          // resolve these (mostly supplementary PUA) codepoints, so we map each
+          // codepoint to its glyph id ourselves (gidMap) and draw the glyph's
+          // outline via pdf-lib's drawSvgPath, advancing by the glyph width.
+          if (!entry || !entry.fkFont) continue;
+          const { fkFont, gidMap, upm } = entry;
+          const gScale = size / upm;
+          let cx = baseLeft + tLeft;
+          for (const ch of text) {
+            const cp = ch.codePointAt(0);
+            if (cp === 32) { cx += size * 0.25; continue; }
+            const gid = gidMap.get(cp);
+            if (gid == null) { cx += size * 0.2; continue; }
+            try {
+              const glyph = fkFont.getGlyph(gid);
+              // Pre-negate y so pdf-lib's drawSvgPath (which flips y for SVG) draws
+              // the fontkit (y-up) glyph upright; place the path's baseline at y.
+              const svg = negateSvgY(glyph.path.toSVG());
+              page.drawSvgPath(svg, { x: cx, y, scale: gScale, color });
+              cx += (glyph.advanceWidth || upm * 0.5) * gScale;
+            } catch (e) { cx += size * 0.2; }
+          }
         } else if (/text-align:center/.test(style) && cCtx && cCtx.width) {
           const trimmed = text.trim();
           const tw = font.widthOfTextAtSize(trimmed, size);
@@ -461,31 +569,32 @@ export async function diagnoseFonts(html) {
     const fam = (fm[1].match(/font-family:["']?([^"';]+)/) || [])[1];
     const b64 = (fm[1].match(/base64,([A-Za-z0-9+/=]+)/) || [])[1];
     if (!fam || !b64) continue;
+    if (fam !== "ff2") continue; // fast probe: only the main Arabic font
     const r = { fam };
     try {
       const woff = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-      const { sfnt, remap } = await woffToSfnt(woff);
-      r.sfntLen = sfnt.length;
-      r.sfntFlavor = Array.from(sfnt.slice(0, 4)).join(",");
-      r.remapSize = remap ? remap.size : 0;
-      const f = await doc.embedFont(sfnt);
-      r.embedded = true;
-      // Probe that fontkit now resolves a BMP and a supplementary PUA codepoint
-      // (both remapped into the BMP range) to real glyphs.
-      try {
-        const probeCp = (cp) => {
-          if (!remap || !remap.has(cp)) return null;
-          const remapped = remap.get(cp);
-          const enc = f.encodeText(String.fromCodePoint(remapped));
-          const gids = [];
-          for (let i = 0; i < enc.length; i += 2) gids.push((enc[i] << 8) | enc[i + 1]);
-          return { remapped: "0x" + remapped.toString(16), gids };
-        };
-        r.encodeE603 = probeCp(0xE603);
-        r.encodeF0209 = probeCp(0xF0209);
-      } catch (ee) {
-        r.encodeErr = ee.message;
+      // Use the RAW font (no cmap rebuild) to confirm fontkit uses the original cmap.
+      const rawSfnt = await rawWoffToSfnt(woff);
+      const cmap = extractTable(rawSfnt, "cmap");
+      const all = collectCmapMappings(cmap);
+      const bmpByGid = new Map();
+      for (const [cp, gid] of all) if (cp <= 0xFFFF) bmpByGid.set(gid, cp);
+      const sup = [];
+      for (const [cp, gid] of all) {
+        if (cp > 0xFFFF) sup.push({ cp: "0x" + cp.toString(16), gid, bmpAlt: bmpByGid.has(gid) ? "0x" + bmpByGid.get(gid).toString(16) : null });
       }
+      r.supplementary = sup.slice(0, 40);
+      r.supCount = sup.length;
+      const f = await doc.embedFont(rawSfnt);
+      r.embedded = true;
+      const probe = (cp) => {
+        try {
+          const e = f.encodeText(String.fromCodePoint(cp));
+          return Array.from(e).map(b => b.toString(16).padStart(2, "0")).join(" ");
+        } catch (e) { return "ERR:" + e.message; }
+      };
+      r.encodeE603 = probe(0xE603);   // BMP PUA — should resolve in original cmap
+      r.encodeF0209 = probe(0xF0209); // supplementary PUA — expected tofu in original
     } catch (e) {
       r.error = e.message;
     }
