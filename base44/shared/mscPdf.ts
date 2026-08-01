@@ -521,7 +521,16 @@ export async function buildPdfFromMscHtml(html) {
           if (!entry || !entry.fkFont) continue;
           const { fkFont, gidMap, upm } = entry;
           const gScale = size / upm;
+          // Line pitch for multi-line divs: pdf2htmlEX emits a wide `_` span
+          // (width ≈ the line advance, cancelled by a large negative margin-left
+          // so net advance ≈ 0) at each wrap. Detect those and step the baseline
+          // down by one line instead of pulling cx back (which would overlap the
+          // previous line). Pitch = div height / line count when known.
+          const divH = css[tokOf(cls, "h")];
+          const bigSpans = [...inner.matchAll(/class="(_ \d+|_\d+)"/g)].length;
+          const linePitch = (divH && bigSpans) ? divH / (bigSpans + 1) * scale : size * 1.15;
           let cx = baseLeft + tLeft;
+          let cy = y;
           // walk inner HTML in order: text chunks carry the PUA glyphs, `_` spans
           // inject the exact inter-glyph spacing; `ffN` spans are spaces in other
           // fonts.
@@ -530,8 +539,17 @@ export async function buildPdfFromMscHtml(html) {
           while ((tk = tokRe.exec(inner))) {
             if (tk[1] !== undefined) {
               if (/^_/.test(tk[1])) {
-                const sp = spanCss[tk[1]] || { width: 0, marginLeft: 0 };
-                cx += (sp.width + sp.marginLeft) * scale;
+                const spanTok = (tk[1].match(/(_[0-9]+)/) || [])[1];
+                const sp = (spanTok && spanCss[spanTok]) || { width: 0, marginLeft: 0 };
+                const wpx = sp.width * scale;
+                // A wide spacer (width bigger than ~2 glyphs) with a cancelling
+                // negative margin is pdf2htmlEX's line-wrap marker.
+                if (sp.width > size * 2 && sp.marginLeft < 0) {
+                  cy += linePitch;
+                  cx = baseLeft + tLeft + (sp.width + sp.marginLeft) * scale;
+                } else {
+                  cx += (sp.width + sp.marginLeft) * scale;
+                }
               } else if (tk[2] && tk[2].trim()) {
                 cx += size * 0.25; // space in a non-PUA font
               }
@@ -544,7 +562,7 @@ export async function buildPdfFromMscHtml(html) {
                 try {
                   const glyph = fkFont.getGlyph(gid);
                   const svg = negateSvgY(glyph.path.toSVG());
-                  page.drawSvgPath(svg, { x: cx, y, scale: gScale, color });
+                  page.drawSvgPath(svg, { x: cx, y: cy, scale: gScale, color });
                   cx += (glyph.advanceWidth || upm * 0.5) * gScale;
                 } catch (e) { cx += size * 0.2; }
               }
