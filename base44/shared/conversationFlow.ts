@@ -360,17 +360,8 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, app
 
   const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
   const summary = `✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}`;
-  const filename = (trip.trip_name || "manifest").replace(/[^\w\- ]+/g, "").slice(0, 60) || "manifest";
 
-  if (sendDocument) {
-    try {
-      await sendDocument(pdfUrl, `${filename}.pdf`, summary);
-    } catch (e) {
-      await sendMessage(`${summary}\n\n📥 PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}`);
-    }
-  } else {
-    await sendMessage(`${summary}\n\n📥 Direct PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
-  }
+  await sendMessage(`${summary}\n\n📥 PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
 
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "done",
