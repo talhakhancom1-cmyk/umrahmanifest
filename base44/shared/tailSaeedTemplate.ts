@@ -64,7 +64,7 @@ export function buildFromTailSaeedTemplate(templateHtml, trip) {
   // ---- Page 1: date, second party, route from/to ----
   p1 = replaceTDivs(p1, [
     (s) => s === SAMPLE_DATE ? date : null,
-    (s) => s === SAMPLE_SECOND_PARTY ? centered(secondParty) : null,
+    // Keep the template's original second-party text ("SHAHID / WITH 01 MEMBER")
     (s) => s === SAMPLE_FROM ? centered(from) : null,
     (s) => s === SAMPLE_TO ? centered(to) : null,
   ]);
