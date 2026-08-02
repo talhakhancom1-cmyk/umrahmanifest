@@ -583,9 +583,17 @@ export async function buildPdfFromMscHtml(html) {
 
         const text = decodeText(inner).trim();
         if (!text) continue;
-        const left = parseFloat((style.match(/left:(-?[0-9.]+)px/) || [])[1] || "0");
-        const bottom = parseFloat((style.match(/bottom:(-?[0-9.]+)px/) || [])[1] || "0");
-        const width = parseFloat((style.match(/width:(-?[0-9.]+)px/) || [])[1] || "0");
+        // dimensions may be px or % of the page (templates use % so the overlay
+        // lands identically on screen and in print)
+        const dim = (prop, ref) => {
+          const m = style.match(new RegExp(prop + ":(-?[0-9.]+)(px|%)"));
+          if (!m) return 0;
+          const v = parseFloat(m[1]);
+          return m[2] === "%" ? (v / 100) * ref : v;
+        };
+        const left = dim("left", W);
+        const bottom = dim("bottom", H);
+        const width = dim("width", W);
         const size = parseFloat((style.match(/font-size:(-?[0-9.]+)px/) || [])[1] || "13");
         const align = (style.match(/text-align:(left|right|center)/) || [])[1] || "center";
         const tw = font.widthOfTextAtSize(text, size);

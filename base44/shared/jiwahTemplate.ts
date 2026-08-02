@@ -44,8 +44,16 @@ const SAMPLE_IDS = [
   "P9386174", "R8434634", "AS031488", "C8722701", "S3622053", "W3784633"
 ];
 
+// Page geometry (px) of the template's own pages. Positions are emitted as
+// percentages of these so the overlay lands identically on screen and in print
+// (the template's print stylesheet re-declares its layout in pt at a different
+// scale, so inline px would drift).
+const PAGE_W = 893;
+const PAGE_H = 1263;
+const pct = (v, ref) => (v / ref * 100).toFixed(4) + "%";
+
 function cell(col, bottom, text) {
-  return `<div class="b44-cell" style="position:absolute;left:${col.left}px;bottom:${bottom}px;width:${col.width}px;` +
+  return `<div class="b44-cell" style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};width:${pct(col.width, PAGE_W)};` +
     `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:12px;color:#000;z-index:9">${text}</div>`;
 }
 
@@ -87,13 +95,9 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
     p2Cells += cell(P2_COLS.name, bottom, esc(p.name || ""));
   }
   if (p2Cells) {
-    // Anchor cells to a zero-size wrapper at the page's bottom-left. The
-    // template's @media print stylesheet re-declares all layout in pt at an
-    // 8/9 scale (1px screen -> 0.888.. pt), while inline px styles print at
-    // 1px = 0.75pt — without compensation the overlay drifts ~3 rows down in
-    // print. Scaling the wrapper by (8/9)/0.75 = 32/27 in print keeps the
-    // cells locked to the grid.
-    const grid = `<div class="b44-grid" style="position:absolute;left:0;bottom:0;width:0;height:0;overflow:visible;z-index:9">${p2Cells}</div>`;
+    // Anchor cells to a full-page wrapper so their percentage positions
+    // resolve against the page box in both screen and print.
+    const grid = `<div class="b44-grid" style="position:absolute;left:0;bottom:0;width:100%;height:100%;overflow:visible;z-index:9">${p2Cells}</div>`;
     const idx = html.indexOf('<div id="pf2"');
     if (idx >= 0) {
       const before = html.slice(0, idx);
@@ -109,7 +113,7 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}.b44-grid{transform:scale(1.1851852);transform-origin:left bottom}}
+@media print{@page{size:A4;margin:0}}
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
