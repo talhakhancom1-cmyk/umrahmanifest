@@ -16,12 +16,17 @@ const BUILDERS = {
   [TAIL_SAEED_TEMPLATE_URL]: buildFromTailSaeedTemplate
 };
 
+// Alias old non-http template identifiers to their real fetched URLs
+const URL_ALIASES = {
+  "tail-saeed-ibrahim-al-thubaiti": TAIL_SAEED_TEMPLATE_URL
+};
+
 const templateCache = {};
 
 export async function buildManifestDoc(trip) {
-  const url = (trip && trip.template_url) || MSC_TEMPLATE_URL;
+  const rawUrl = (trip && trip.template_url) || MSC_TEMPLATE_URL;
+  const url = URL_ALIASES[rawUrl] || rawUrl;
   const builder = BUILDERS[url] || buildFromMscTemplate;
-  // Virtual/local templates (no http URL) don't need a fetch — pass empty string
   if (!url.startsWith("http")) {
     return builder("", trip);
   }
