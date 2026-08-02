@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, FileText } from "lucide-react";
+import { ArrowLeft, Printer, FileText, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { downloadWord } from "@/lib/wordExport.jsx";
 import { generateManifest } from "@/functions/generateManifest";
@@ -58,6 +58,12 @@ export default function TripDocument() {
                 <FileText className="w-4 h-4" /> Word
               </Button>
             )}
+            <a
+              href={`/functions/manifestPdf?trip_id=${id}`}
+              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium no-print"
+            >
+              <Download className="w-4 h-4" /> Download PDF
+            </a>
             <Button onClick={handlePrint}>
               <Printer className="w-4 h-4" /> Print / Save PDF
             </Button>
