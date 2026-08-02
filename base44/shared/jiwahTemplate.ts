@@ -87,10 +87,17 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
     p2Cells += cell(P2_COLS.name, bottom, esc(p.name || ""));
   }
   if (p2Cells) {
+    // Anchor cells to a zero-size wrapper at the page's bottom-left. The
+    // template's @media print stylesheet re-declares all layout in pt at an
+    // 8/9 scale (1px screen -> 0.888.. pt), while inline px styles print at
+    // 1px = 0.75pt — without compensation the overlay drifts ~3 rows down in
+    // print. Scaling the wrapper by (8/9)/0.75 = 32/27 in print keeps the
+    // cells locked to the grid.
+    const grid = `<div class="b44-grid" style="position:absolute;left:0;bottom:0;width:0;height:0;overflow:visible">${p2Cells}</div>`;
     const idx = html.indexOf('<div id="pf2"');
     if (idx >= 0) {
       const before = html.slice(0, idx);
-      const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${p2Cells}`);
+      const after = html.slice(idx).replace(/(<div class="pc[^"]*">)/, `$1${grid}`);
       html = before + after;
     }
   }
@@ -102,7 +109,7 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}}
+@media print{@page{size:A4;margin:0}.b44-grid{transform:scale(1.1851852);transform-origin:left bottom}}
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
