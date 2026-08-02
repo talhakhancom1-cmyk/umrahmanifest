@@ -1,5 +1,42 @@
 import { uploadImageBuffer, processPassengerPhoto, createTripFromTemplate } from "./tripUtils.ts";
 
+// Single source of truth for the route menu (used to build the menu and to
+// resolve the user's numeric reply).
+export const ROUTES = [
+  { from: "Madina", to: "Makkah" },
+  { from: "Makkah", to: "Madina" },
+  { from: "Riyadh", to: "Makkah" },
+  { from: "Riyadh", to: "Madina" },
+  { from: "Madina", to: "Riyadh" },
+  { from: "Makkah", to: "Riyadh" },
+  { from: "Riyadh", to: "Dammam" },
+  { from: "Riyadh", to: "Jeddah" },
+  { from: "Riyadh", to: "Al_Qasim" },
+  { from: "Riyadh", to: "Zalim" },
+  { from: "Riyadh", to: "Tayab" },
+  { from: "Zalim", to: "Tayab" },
+  { from: "Tayab", to: "Jeddah" },
+  { from: "Jeddah", to: "Makkah" },
+  { from: "Jeddah", to: "Al_Qasim" },
+  { from: "Al_Qasim", to: "Riyadh" },
+  { from: "Ramazia", to: "Riyadh" },
+  { from: "Al_Hanakiyyah", to: "Al_Qasim" },
+  { from: "Riyadh", to: "Al_Humiyat" },
+  { from: "Al_Humiyat", to: "Makkah" },
+  { from: "Jeddah", to: "Al_Humiyat" },
+  { from: "Al_Humiyat", to: "Riyadh" },
+  { from: "Makkah", to: "Jeddah" },
+  { from: "Riswan", to: "Makkah" },
+  { from: "Riswan", to: "Madina" },
+  { from: "Makkah", to: "Ajdar_Milan_Airport" },
+  { from: "Ruwaydah", to: "Riyadh" },
+  { from: "Madina", to: "Buraidah" }
+];
+
+// Underscores are Markdown syntax in Telegram — an unbalanced one makes the
+// API reject the whole message, which is why the route menu never appeared.
+const cityLabel = (c) => String(c || "").replace(/_/g, " ");
+
 export async function handleTextUpdate(base44, sessionEntityName, session, text, sendMessage, appUrl, appId, sendDocument) {
   const lowerText = text.toLowerCase().trim();
 
@@ -134,42 +171,12 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_route"
   });
-  const ROUTES = [
-    { from: "Madina", to: "Makkah", icon: "🕌 → 🕋" },
-    { from: "Makkah", to: "Madina", icon: "🕋 → 🕌" },
-    { from: "Riyadh", to: "Makkah", icon: "🏙️ → 🕋" },
-    { from: "Riyadh", to: "Madina", icon: "🏙️ → 🕌" },
-    { from: "Madina", to: "Riyadh", icon: "🕌 → 🏙️" },
-    { from: "Makkah", to: "Riyadh", icon: "🕋 → 🏙️" },
-    { from: "Riyadh", to: "Dammam", icon: "🏙️ → 🌊" },
-    { from: "Riyadh", to: "Jeddah", icon: "🏙️ → 🌊" },
-    { from: "Riyadh", to: "Al_Qasim", icon: "🏙️ → 🏛️" },
-    { from: "Riyadh", to: "Zalim", icon: "🏙️ → 🌊" },
-    { from: "Riyadh", to: "Tayab", icon: "🏙️ → 🌊" },
-    { from: "Zalim", to: "Tayab", icon: "🏙️ → 🌊" },
-    { from: "Tayab", to: "Jeddah", icon: "🏙️ → ✈️" },
-    { from: "Jeddah", to: "Makkah", icon: "🌃 → 🕋" },
-    { from: "Jeddah", to: "Al_Qasim", icon: "🌃 → 🏛️" },
-    { from: "Al_Qasim", to: "Riyadh", icon: "🏛️ → 🏙️" },
-    { from: "Ramazia", to: "Riyadh", icon: "🏛️ → 🏙️" },
-    { from: "Al_Hanakiyyah", to: "Al_Qasim", icon: "🏜️ → 🏛️" },
-    { from: "Riyadh", to: "Al_Humiyat", icon: "🏙️ → 🏜️" },
-    { from: "Al_Humiyat", to: "Makkah", icon: "🏜️ → 🕋" },
-    { from: "Jeddah", to: "Al_Humiyat", icon: "🌃 → 🏜️" },
-    { from: "Al_Humiyat", to: "Riyadh", icon: "🏜️ → 🏙️" },
-    { from: "Makkah", to: "Jeddah", icon: "🕋 → 🌃" },
-    { from: "Riswan", to: "Makkah", icon: "🏜️ → 🕋" },
-    { from: "Riswan", to: "Madina", icon: "🏜️ → 🕌" },
-    { from: "Makkah", to: "Ajdar_Milan_Airport", icon: "🕋 → ✈️" },
-    { from: "Ruwaydah", to: "Riyadh", icon: "🏜️ → 🏙️" },
-    { from: "Madina", to: "Buraidah", icon: "🕌 → 🏛️" }
-  ];
-  const menu = ROUTES.map((r, i) => `${i + 1}. ${r.from} → ${r.to}`);
+  const menu = ROUTES.map((r, i) => `${i + 1}. ${cityLabel(r.from)} → ${cityLabel(r.to)}`);
   // 2-column inline keyboard so all routes fit compactly in Telegram
   const inlineRows = [];
   for (let i = 0; i < ROUTES.length; i += 2) {
-    const row = [{ text: `${i + 1}. ${ROUTES[i].from} → ${ROUTES[i].to}`, data: String(i + 1) }];
-    if (ROUTES[i + 1]) row.push({ text: `${i + 2}. ${ROUTES[i + 1].from} → ${ROUTES[i + 1].to}`, data: String(i + 2) });
+    const row = [{ text: menu[i], data: String(i + 1) }];
+    if (ROUTES[i + 1]) row.push({ text: menu[i + 1], data: String(i + 2) });
     inlineRows.push(row);
   }
   // Custom route option so users can enter any from/to not in the list
@@ -186,36 +193,6 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
 
 async function handleRouteSelection(base44, sessionEntityName, session, text, sendMessage) {
   const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
-  const ROUTES = [
-    { from: "Madina", to: "Makkah" },
-    { from: "Makkah", to: "Madina" },
-    { from: "Riyadh", to: "Makkah" },
-    { from: "Riyadh", to: "Madina" },
-    { from: "Madina", to: "Riyadh" },
-    { from: "Makkah", to: "Riyadh" },
-    { from: "Riyadh", to: "Dammam" },
-    { from: "Riyadh", to: "Jeddah" },
-    { from: "Riyadh", to: "Al_Qasim" },
-    { from: "Riyadh", to: "Zalim" },
-    { from: "Riyadh", to: "Tayab" },
-    { from: "Zalim", to: "Tayab" },
-    { from: "Tayab", to: "Jeddah" },
-    { from: "Jeddah", to: "Makkah" },
-    { from: "Jeddah", to: "Al_Qasim" },
-    { from: "Al_Qasim", to: "Riyadh" },
-    { from: "Ramazia", to: "Riyadh" },
-    { from: "Al_Hanakiyyah", to: "Al_Qasim" },
-    { from: "Riyadh", to: "Al_Humiyat" },
-    { from: "Al_Humiyat", to: "Makkah" },
-    { from: "Jeddah", to: "Al_Humiyat" },
-    { from: "Al_Humiyat", to: "Riyadh" },
-    { from: "Makkah", to: "Jeddah" },
-    { from: "Riswan", to: "Makkah" },
-    { from: "Riswan", to: "Madina" },
-    { from: "Makkah", to: "Ajdar_Milan_Airport" },
-    { from: "Ruwaydah", to: "Riyadh" },
-    { from: "Madina", to: "Buraidah" }
-  ];
   // Custom route entry — let user type any from/to
   if (text === "custom" || text === "✏️ custom route") {
     await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
@@ -238,7 +215,7 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
     route_to: routeTo
   });
   await sendMessage(
-    `✅ Route: *${routeFrom} → ${routeTo}*\n\n📅 *Step 2 of 4 — Date & Time*\n\nSend the travel date and time, for example:\n\`2024-01-15 7:05 PM\``,
+    `✅ Route: *${cityLabel(routeFrom)} → ${cityLabel(routeTo)}*\n\n📅 *Step 2 of 4 — Date & Time*\n\nSend the travel date and time, for example:\n\`2024-01-15 7:05 PM\``,
     { markdown: true }
   );
 }
@@ -413,7 +390,7 @@ async function finalizeTrip(base44, sessionEntityName, session, sendMessage, app
   const pdfUrl = `${appId}/manifestPdf?trip_id=${trip.id}`;
 
   const driverLine = session.driver ? `\n🚗 Driver: ${session.driver.name}${session.driver.name2 ? ` & ${session.driver.name2}` : ""}` : "";
-  const summary = `✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${session.route_from} → ${session.route_to}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}`;
+  const summary = `✅ Trip manifest created!\n\n📊 Passengers: ${session.passengers.length}\n🛣️ Route: ${cityLabel(session.route_from)} → ${cityLabel(session.route_to)}\n📅 Date: ${session.travel_date}${session.trip_time ? " " + session.trip_time : ""}\n🏢 ${company.name_ar}${driverLine}`;
 
   await sendMessage(`${summary}\n\n📥 PDF download:\n${pdfUrl}\n\n📄 View online:\n${docUrl}\n\nTo start a new trip, send "start".`);
 
