@@ -161,11 +161,18 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
     { from: "Madina", to: "Buraidah", icon: "🕌 → 🏛️" }
   ];
   const menu = ROUTES.map((r, i) => `${i + 1}. ${r.from} → ${r.to}`);
+  // 2-column inline keyboard so all routes fit compactly in Telegram
+  const inlineRows = [];
+  for (let i = 0; i < ROUTES.length; i += 2) {
+    const row = [{ text: `${i + 1}. ${ROUTES[i].from} → ${ROUTES[i].to}`, data: String(i + 1) }];
+    if (ROUTES[i + 1]) row.push({ text: `${i + 2}. ${ROUTES[i + 1].from} → ${ROUTES[i + 1].to}`, data: String(i + 2) });
+    inlineRows.push(row);
+  }
   await sendMessage(
     `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n${menu.join("\n")}\n\nTap a button or reply with a number.`,
     {
       markdown: true,
-      inline: ROUTES.map((r, i) => [{ text: `${r.icon} ${r.from} → ${r.to}`, data: String(i + 1) }]),
+      inline: inlineRows,
       keyboard: menu
     }
   );
