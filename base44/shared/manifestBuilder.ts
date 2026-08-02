@@ -6,6 +6,7 @@ import { buildFromSaudTemplate, SAUD_TEMPLATE_URL } from "./saudTemplate.ts";
 import { buildFromJiwahTemplate, JIWAH_TEMPLATE_URL } from "./jiwahTemplate.ts";
 import { buildFromIshraqTemplate, ISHRAQ_TEMPLATE_URL } from "./ishraqTemplate.ts";
 import { buildFromTailSaeedTemplate, TAIL_SAEED_TEMPLATE_URL } from "./tailSaeedTemplate.ts";
+import { buildFromImranTemplate, IMRAN_TEMPLATE_URL } from "./imranTemplate.ts";
 
 const BUILDERS = {
   [MSC_TEMPLATE_URL]: buildFromMscTemplate,
@@ -13,7 +14,8 @@ const BUILDERS = {
   [SAUD_TEMPLATE_URL]: buildFromSaudTemplate,
   [JIWAH_TEMPLATE_URL]: buildFromJiwahTemplate,
   [ISHRAQ_TEMPLATE_URL]: buildFromIshraqTemplate,
-  [TAIL_SAEED_TEMPLATE_URL]: buildFromTailSaeedTemplate
+  [TAIL_SAEED_TEMPLATE_URL]: buildFromTailSaeedTemplate,
+  [IMRAN_TEMPLATE_URL]: buildFromImranTemplate
 };
 
 // Alias old non-http template identifiers to their real fetched URLs
