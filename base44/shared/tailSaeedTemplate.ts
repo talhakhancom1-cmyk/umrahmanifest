@@ -64,7 +64,10 @@ export function buildFromTailSaeedTemplate(templateHtml, trip) {
   // ---- Page 1: date, second party, route from/to ----
   p1 = replaceTDivs(p1, [
     (s) => s === SAMPLE_DATE ? date : null,
-    // Keep the template's original second-party text ("SHAHID / WITH 01 MEMBER")
+    // Keep "SHAHID" as the second party, but make the member count dynamic
+    (s) => s === SAMPLE_SECOND_PARTY
+      ? centered(`SHAHID / WITH ${String(Math.max(passengers.length - 1, 0)).padStart(2, "0")} MEMBER${passengers.length - 1 === 1 ? "" : "S"}`)
+      : null,
     (s) => s === SAMPLE_FROM ? centered(from) : null,
     (s) => s === SAMPLE_TO ? centered(to) : null,
   ]);
