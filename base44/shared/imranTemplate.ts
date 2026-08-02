@@ -81,7 +81,8 @@ const COL_NAT = [660, 210];
 const M0_SCALE = 0.375;
 
 // Approx unscaled glyph width (px) at fs3 (56.16px) for the ff5 font.
-const CHAR_W = 27;
+// Deliberately generous so long names always squeeze enough to stay in column.
+const CHAR_W = 36;
 
 function paxCell(col, bottom, text, align) {
   const w = col[1] / M0_SCALE;
