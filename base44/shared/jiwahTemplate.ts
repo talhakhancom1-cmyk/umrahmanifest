@@ -93,7 +93,7 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
     // 1px = 0.75pt — without compensation the overlay drifts ~3 rows down in
     // print. Scaling the wrapper by (8/9)/0.75 = 32/27 in print keeps the
     // cells locked to the grid.
-    const grid = `<div class="b44-grid" style="position:absolute;left:0;bottom:0;width:0;height:0;overflow:visible">${p2Cells}</div>`;
+    const grid = `<div class="b44-grid" style="position:absolute;left:0;bottom:0;width:0;height:0;overflow:visible;z-index:9">${p2Cells}</div>`;
     const idx = html.indexOf('<div id="pf2"');
     if (idx >= 0) {
       const before = html.slice(0, idx);
