@@ -47,12 +47,10 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/trips/:id" element={<TripWorkspace />} />
-        <Route path="/trips/:id/document" element={<TripDocument />} />
-        <Route path="/settings" element={<Settings />} />
-      </Route>
+      <Route path="/" element={<Home />} />
+      <Route path="/trips/:id" element={<TripWorkspace />} />
+      <Route path="/trips/:id/document" element={<TripDocument />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
