@@ -5,21 +5,35 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Printer, FileText, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { downloadWord } from "@/lib/wordExport.jsx";
+import { appParams } from "@/lib/app-params";
 
-// Public manifest endpoints (service-role, no auth required) — work on any
-// device via the unguessable trip id.
-const manifestViewUrl = (id) =>
-  `${window.location.origin}/functions/manifestView?trip_id=${id}`;
-const manifestPdfUrl = (id) =>
-  `${window.location.origin}/functions/manifestPdf?trip_id=${id}`;
+// Public manifest endpoints (service-role, no auth) — direct API path works
+// on any domain/device.
+const fnUrl = (name, id) =>
+  `/api/apps/${appParams.appId}/functions/${name}?trip_id=${id}`;
 
 export default function TripDocument() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [trip, setTrip] = useState(null);
+  const [html, setHtml] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const iframeRef = useRef(null);
+
+  // Load the manifest via the public manifestView function (service-role,
+  // no auth required) through the SDK so it resolves the correct domain.
+  useEffect(() => {
+    fetch(fnUrl("manifestView", id))
+      .then((res) => {
+        if (!res.ok) throw new Error("view failed");
+        return res.text();
+      })
+      .then(setHtml)
+      .catch(() => {
+        toast({ title: "Could not generate document", variant: "destructive" });
+      });
+  }, [id]);
 
   // Trip metadata is best-effort (used for the Word button + filename only).
   // The document itself is loaded via the public manifestView endpoint, so a
@@ -33,7 +47,7 @@ export default function TripDocument() {
   const handleDownloadPdf = async () => {
     setPdfLoading(true);
     try {
-      const res = await fetch(manifestPdfUrl(id));
+      const res = await fetch(fnUrl("manifestPdf", id));
       if (!res.ok) throw new Error("PDF failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -83,7 +97,7 @@ export default function TripDocument() {
       <iframe
         ref={iframeRef}
         title="Trip Document"
-        src={manifestViewUrl(id)}
+        srcDoc={html || "<html><body style='font-family:sans-serif;color:#888;display:flex;align-items:center;justify-content:center;height:100vh'>Generating document…</body></html>"}
         className="flex-1 w-full border-0"
         style={{ minHeight: "calc(100vh - 61px)" }}
       />

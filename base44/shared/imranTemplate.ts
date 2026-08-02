@@ -70,13 +70,29 @@ const ROW_BOTTOMS = [
   531.54, 498.24, 464.94, 431.64, 399.42, 366.12
 ];
 
-// Passenger table column boxes (px): [left, width]
+// Passenger table column boxes (px): [left, visible width]
 const COL_NAME = [188, 295];
 const COL_ID = [500, 150];
 const COL_NAT = [660, 210];
 
+// The template scales all .t text via the m0 matrix (0.375). Cells must carry
+// m0 too, and their width must be specified in unscaled units so text-align
+// works inside the visible column box.
+const M0_SCALE = 0.375;
+
+// Approx unscaled glyph width (px) at fs3 (56.16px) for the ff5 font.
+const CHAR_W = 27;
+
 function paxCell(col, bottom, text, align) {
-  return `<div class="t ff5 fs3 fc0 sc0" style="left:${col[0]}px;bottom:${bottom}px;width:${col[1]}px;text-align:${align};white-space:pre;overflow:visible;z-index:9">${text}</div>`;
+  const w = col[1] / M0_SCALE;
+  // Squeeze horizontally when the text is too wide for the column so it never
+  // overflows into the next column (mirrors pdf2htmlEX's matrix scaling).
+  const est = text.length * CHAR_W;
+  const sx = est > w ? w / est : 1;
+  const style = sx < 1
+    ? `transform:matrix(${(M0_SCALE * sx).toFixed(4)},0,0,${M0_SCALE},0,0);`
+    : "";
+  return `<div class="t m0 ff5 fs3 fc0 sc0" style="left:${col[0]}px;bottom:${bottom}px;width:${(w / sx).toFixed(2)}px;text-align:${align};white-space:pre;overflow:visible;z-index:9;${style}">${text}</div>`;
 }
 
 export function buildFromImranTemplate(templateHtml, trip) {
