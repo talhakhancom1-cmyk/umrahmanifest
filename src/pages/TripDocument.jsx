@@ -6,6 +6,7 @@ import { ArrowLeft, Printer, FileText, Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { downloadWord } from "@/lib/wordExport.jsx";
 import { generateManifest } from "@/functions/generateManifest";
+import { base44 as base44Client } from "@/api/base44Client";
 
 export default function TripDocument() {
   const { id } = useParams();
@@ -28,6 +29,29 @@ export default function TripDocument() {
         toast({ title: "Could not generate document", variant: "destructive" });
       });
   }, [id]);
+
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const res = await base44Client.functions.fetch(
+        `/manifestPdf?trip_id=${id}`
+      );
+      if (!res.ok) throw new Error("PDF failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(trip?.trip_name || "manifest").replace(/[^\w\- ]+/g, "").slice(0, 60) || "manifest"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast({ title: "Could not generate PDF", variant: "destructive" });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const handlePrint = () => {
     const win = iframeRef.current?.contentWindow;
@@ -58,12 +82,10 @@ export default function TripDocument() {
                 <FileText className="w-4 h-4" /> Word
               </Button>
             )}
-            <a
-              href={`/functions/manifestPdf?trip_id=${id}`}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium no-print"
-            >
-              <Download className="w-4 h-4" /> Download PDF
-            </a>
+            <Button onClick={handleDownloadPdf} disabled={pdfLoading}>
+              <Download className="w-4 h-4" />{" "}
+              {pdfLoading ? "Generating…" : "Download PDF"}
+            </Button>
             <Button onClick={handlePrint}>
               <Printer className="w-4 h-4" /> Print / Save PDF
             </Button>
