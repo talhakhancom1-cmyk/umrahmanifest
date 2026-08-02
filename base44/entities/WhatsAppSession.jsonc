@@ -14,49 +14,16 @@
         "awaiting_datetime",
         "awaiting_company",
         "awaiting_driver",
+        "awaiting_custom_route",
         "done"
       ],
       "default": "idle"
     },
     "route_from": {
-      "type": "string",
-      "enum": [
-        "Madina",
-        "Makkah",
-        "Riyadh",
-        "Dammam",
-        "Jeddah",
-        "Zalim",
-        "Tayab",
-        "Al_Qasim",
-        "Ramazia",
-        "Al_Hanakiyyah",
-        "Al_Humiyat",
-        "Riswan",
-        "Ajdar_Milan_Airport",
-        "Ruwaydah",
-        "Buraidah"
-      ]
+      "type": "string"
     },
     "route_to": {
-      "type": "string",
-      "enum": [
-        "Madina",
-        "Makkah",
-        "Riyadh",
-        "Dammam",
-        "Jeddah",
-        "Zalim",
-        "Tayab",
-        "Al_Qasim",
-        "Ramazia",
-        "Al_Hanakiyyah",
-        "Al_Humiyat",
-        "Riswan",
-        "Ajdar_Milan_Airport",
-        "Ruwaydah",
-        "Buraidah"
-      ]
+      "type": "string"
     },
     "travel_date": {
       "type": "string",

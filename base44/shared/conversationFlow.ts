@@ -20,6 +20,8 @@ export async function handleTextUpdate(base44, sessionEntityName, session, text,
     }
   } else if (session.state === "awaiting_route") {
     await handleRouteSelection(base44, sessionEntityName, session, lowerText, sendMessage);
+  } else if (session.state === "awaiting_custom_route") {
+    await handleCustomRoute(base44, sessionEntityName, session, text.trim(), sendMessage);
   } else if (session.state === "awaiting_datetime") {
     await handleDateTime(base44, sessionEntityName, session, text.trim(), sendMessage);
   } else if (session.state === "awaiting_company") {
@@ -36,6 +38,8 @@ export async function handlePhotoUpdate(base44, sessionEntityName, session, phot
     await sendMessage("Please reply with 1 or 2 for the route first.");
   } else if (session.state === "awaiting_datetime") {
     await sendMessage('Please send the date and time first (e.g. 2024-01-15 7:05 PM).');
+  } else if (session.state === "awaiting_custom_route") {
+    await sendMessage('Please type your custom route first, e.g. `Madina to Buraidah`', { markdown: true });
   } else if (session.state === "awaiting_company" || session.state === "awaiting_driver") {
     await sendMessage("Please pick an option from the menu first.");
   } else {
@@ -168,12 +172,14 @@ async function askRoute(base44, sessionEntityName, session, sendMessage) {
     if (ROUTES[i + 1]) row.push({ text: `${i + 2}. ${ROUTES[i + 1].from} → ${ROUTES[i + 1].to}`, data: String(i + 2) });
     inlineRows.push(row);
   }
+  // Custom route option so users can enter any from/to not in the list
+  inlineRows.push([{ text: "✏️ Custom route", data: "custom" }]);
   await sendMessage(
-    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n${menu.join("\n")}\n\nTap a button or reply with a number.`,
+    `✅ *${session.passengers.length} passenger${session.passengers.length > 1 ? "s" : ""} added.*\n\n🛣️ *Step 1 of 4 — Route*\n\n${menu.join("\n")}\n\nTap a button, reply with a number, or tap *Custom route* to type your own.`,
     {
       markdown: true,
       inline: inlineRows,
-      keyboard: menu
+      keyboard: [...menu, "custom"]
     }
   );
 }
@@ -210,11 +216,46 @@ async function handleRouteSelection(base44, sessionEntityName, session, text, se
     { from: "Ruwaydah", to: "Riyadh" },
     { from: "Madina", to: "Buraidah" }
   ];
+  // Custom route entry — let user type any from/to
+  if (text === "custom" || text === "✏️ custom route") {
+    await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
+      state: "awaiting_custom_route"
+    });
+    await sendMessage(
+      `✏️ *Custom route*\n\nType your route as:\n\`From to To\`\n\nExample: \`Madina to Buraidah\``,
+      { markdown: true }
+    );
+    return;
+  }
   if (!num || num < 1 || num > ROUTES.length) {
-    await sendMessage(`Please reply with a number between 1 and ${ROUTES.length}.`);
+    await sendMessage(`Please reply with a number between 1 and ${ROUTES.length}, or tap *Custom route*.`, { markdown: true });
     return;
   }
   const { from: routeFrom, to: routeTo } = ROUTES[num - 1];
+  await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
+    state: "awaiting_datetime",
+    route_from: routeFrom,
+    route_to: routeTo
+  });
+  await sendMessage(
+    `✅ Route: *${routeFrom} → ${routeTo}*\n\n📅 *Step 2 of 4 — Date & Time*\n\nSend the travel date and time, for example:\n\`2024-01-15 7:05 PM\``,
+    { markdown: true }
+  );
+}
+
+async function handleCustomRoute(base44, sessionEntityName, session, text, sendMessage) {
+  // Accept "From to To", "From -> To", "From - To", or "From, To"
+  const m = text.match(/^(.+?)\s*(?:to|->|→|-|,)\s*(.+)$/i);
+  if (!m) {
+    await sendMessage('⚠️ Could not read the route. Please type like:\n`Madina to Buraidah`', { markdown: true });
+    return;
+  }
+  const routeFrom = m[1].trim();
+  const routeTo = m[2].trim();
+  if (!routeFrom || !routeTo) {
+    await sendMessage('⚠️ Please provide both cities, e.g. `Madina to Buraidah`', { markdown: true });
+    return;
+  }
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_datetime",
     route_from: routeFrom,

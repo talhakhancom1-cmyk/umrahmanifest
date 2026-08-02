@@ -167,54 +167,39 @@ export default function TripWorkspace() {
           </div>
           <div className="space-y-1.5">
             <Label>Route From</Label>
-            <Select
-              value={trip.route_from}
-              onValueChange={(v) => setTrip({ ...trip, route_from: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Madina">Madina</SelectItem>
-                <SelectItem value="Makkah">Makkah</SelectItem>
-                <SelectItem value="Riyadh">Riyadh</SelectItem>
-                <SelectItem value="Dammam">Dammam</SelectItem>
-                <SelectItem value="Jeddah">Jeddah</SelectItem>
-                <SelectItem value="Zalim">Zalim</SelectItem>
-                <SelectItem value="Tayab">Tayab</SelectItem>
-                <SelectItem value="Al_Qasim">Al Qasim</SelectItem>
-                <SelectItem value="Ramazia">Ramazia</SelectItem>
-                <SelectItem value="Al_Hanakiyyah">Al Hanakiyyah</SelectItem>
-                <SelectItem value="Al_Humiyat">Al Humiyat</SelectItem>
-                <SelectItem value="Riswan">Riswan</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              list="route-options"
+              value={trip.route_from || ""}
+              onChange={(e) => setTrip({ ...trip, route_from: e.target.value })}
+              placeholder="e.g. Madina"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Route To</Label>
-            <Select
-              value={trip.route_to}
-              onValueChange={(v) => setTrip({ ...trip, route_to: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Madina">Madina</SelectItem>
-                <SelectItem value="Makkah">Makkah</SelectItem>
-                <SelectItem value="Riyadh">Riyadh</SelectItem>
-                <SelectItem value="Dammam">Dammam</SelectItem>
-                <SelectItem value="Jeddah">Jeddah</SelectItem>
-                <SelectItem value="Zalim">Zalim</SelectItem>
-                <SelectItem value="Tayab">Tayab</SelectItem>
-                <SelectItem value="Al_Qasim">Al Qasim</SelectItem>
-                <SelectItem value="Ramazia">Ramazia</SelectItem>
-                <SelectItem value="Al_Hanakiyyah">Al Hanakiyyah</SelectItem>
-                <SelectItem value="Al_Humiyat">Al Humiyat</SelectItem>
-                <SelectItem value="Riswan">Riswan</SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              list="route-options"
+              value={trip.route_to || ""}
+              onChange={(e) => setTrip({ ...trip, route_to: e.target.value })}
+              placeholder="e.g. Makkah"
+            />
           </div>
+          <datalist id="route-options">
+            <option value="Madina" />
+            <option value="Makkah" />
+            <option value="Riyadh" />
+            <option value="Dammam" />
+            <option value="Jeddah" />
+            <option value="Zalim" />
+            <option value="Tayab" />
+            <option value="Al_Qasim" />
+            <option value="Ramazia" />
+            <option value="Al_Hanakiyyah" />
+            <option value="Al_Humiyat" />
+            <option value="Riswan" />
+            <option value="Ajdar_Milan_Airport" />
+            <option value="Ruwaydah" />
+            <option value="Buraidah" />
+          </datalist>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
