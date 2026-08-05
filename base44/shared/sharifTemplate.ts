@@ -96,6 +96,15 @@ function replaceAllDivInner(html, fullClass, newInner) {
   );
 }
 
+// Squeeze a value horizontally so it stays inside its baked cell width.
+// `fits` = number of characters the original sample occupied in that cell.
+function fit(text, fits) {
+  const s = String(text);
+  if (s.length <= fits) return s;
+  const sx = (fits / s.length).toFixed(3);
+  return `<span style="display:inline-block;white-space:nowrap;transform:scaleX(${sx});transform-origin:center center">${s}</span>`;
+}
+
 // Normalise time to the template's "06:45am" style (zero-padded, no space).
 function fmtTime(t) {
   if (!t) return "";
@@ -107,8 +116,15 @@ function fmtTime(t) {
 }
 
 function cell(col, bottom, text) {
+  // Single line always: never wrap (a wrap pushes the row upward and breaks
+  // alignment). Long values are squeezed horizontally to fit the column.
+  const CHAR_W = 13.2; // avg px per char at 20px bold Arial
+  const est = String(text).length * CHAR_W;
+  const sx = est > col.width ? (col.width / est).toFixed(3) : "1";
+  const origin = col.align === "left" ? "left" : "center";
   return `<div class="b44-cell" style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};width:${pct(col.width, PAGE_W)};` +
-    `text-align:${col.align};font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:20px;color:#000;z-index:9">${text}</div>`;
+    `text-align:${col.align};white-space:nowrap;overflow:visible;line-height:1.1;transform:scaleX(${sx});transform-origin:${origin} center;` +
+    `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:20px;color:#000;z-index:9">${text}</div>`;
 }
 
 export function buildFromSharifTemplate(templateHtml, trip) {
@@ -152,7 +168,7 @@ export function buildFromSharifTemplate(templateHtml, trip) {
   // ---- Page 2: vehicle details (driver, iqama, plate) ----
   // Phone and driver nationality are baked-in (not captured by the Driver
   // entity) and are left as-is.
-  if (driverName) p2 = replaceDivInner(p2, P2_V_DRIVER, driverName);
+  if (driverName) p2 = replaceDivInner(p2, P2_V_DRIVER, fit(driverName, 13));
   if (driverIqama) p2 = replaceDivInner(p2, P2_V_IQAMA, driverIqama);
   if (plate) p2 = replaceDivInner(p2, P2_V_PLATE, plate);
 
@@ -183,7 +199,7 @@ export function buildFromSharifTemplate(templateHtml, trip) {
   p3 = replaceDivInner(p3, P3_DATE, date);
   p3 = replaceDivInner(p3, P3_TIME, time);
   if (plate) p3 = replaceDivInner(p3, P3_PLATE, plate);
-  if (driverName) p3 = replaceDivInner(p3, P3_DRIVER, driverName);
+  if (driverName) p3 = replaceDivInner(p3, P3_DRIVER, fit(driverName, 13));
 
   // ---- CSS overrides (same print-safe setup as the other templates) ----
   const extraCss = `
