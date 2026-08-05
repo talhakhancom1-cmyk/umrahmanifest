@@ -70,8 +70,16 @@ function extractRowBottoms(pageHtml, head) {
     if (/^([89]|1[0-3])$/.test(plain) && !(plain in bottoms)) {
       const yCls = cCls.split(/\s+/).find((c) => /^y[0-9a-z]+$/.test(c));
       if (yCls) {
-        const mm = head.match(new RegExp("\\." + yCls + "\\{bottom:(-?[0-9.]+)px"));
-        if (mm) bottoms[plain] = parseFloat(mm[1]);
+        // pdf2htmlEX defines each y-class twice: px for screen and pt inside
+        // @media print. Capture both so added rows align in both modes.
+        const px = head.match(new RegExp("\\." + yCls + "\\{bottom:(-?[0-9.]+)px"));
+        const pt = head.match(new RegExp("\\." + yCls + "\\{bottom:(-?[0-9.]+)pt"));
+        if (px) {
+          bottoms[plain] = {
+            px: parseFloat(px[1]),
+            pt: pt ? parseFloat(pt[1]) : parseFloat(px[1]) / 1.125
+          };
+        }
       }
     }
     return m;
@@ -167,18 +175,21 @@ export function buildFromMscTemplate(templateHtml, trip) {
   ]);
   // rows 8..13 have no sample text — clone the template's own row-7 cells so
   // extra passengers align with the table both on screen and when printed
-  const mkCell = (tpl, bottom, text) =>
-    `<div class="${tpl.cCls}" style="bottom:${bottom}px;z-index:9">` +
+  const mkCell = (tpl, row, text) =>
+    `<div class="${tpl.cCls} b44r${row}" style="z-index:9">` +
     `<div class="${tpl.tCls}" style="left:0;width:266.667%;text-align:center">${text}</div></div>`;
-  let extraCells = "";
+  let extraCells = "", rowCssScreen = "", rowCssPrint = "";
   for (let i = 7; i < 13; i++) {
     const p = passengers[i];
     if (!p) continue;
-    const b = rowBottoms[String(i + 1)];
+    const row = i + 1;
+    const b = rowBottoms[String(row)];
     if (b !== undefined && nameTpl && idTpl && natTpl) {
-      extraCells += mkCell(natTpl, b, esc(p.nationality || ""));
-      extraCells += mkCell(idTpl, b, esc(p.id_number || ""));
-      extraCells += mkCell(nameTpl, b, esc(p.name || ""));
+      rowCssScreen += `.b44r${row}{bottom:${b.px}px!important}`;
+      rowCssPrint += `.b44r${row}{bottom:${b.pt}pt!important}`;
+      extraCells += mkCell(natTpl, row, esc(p.nationality || ""));
+      extraCells += mkCell(idTpl, row, esc(p.id_number || ""));
+      extraCells += mkCell(nameTpl, row, esc(p.name || ""));
     } else {
       const y = ROW_Y[i];
       extraCells += addedCell(COL_NAT, y, esc(p.nationality || ""));
@@ -205,6 +216,8 @@ export function buildFromMscTemplate(templateHtml, trip) {
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
 @media print{@page{size:A4;margin:0}}
+${rowCssScreen}
+@media print{${rowCssPrint}}
 </style>`;
   head = head.replace("</head>", extraCss + "\n</head>");
   head = head.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);

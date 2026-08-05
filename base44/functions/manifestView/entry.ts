@@ -4,11 +4,15 @@ import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 
 // Public document viewer: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
+// (v2: print-aligned extra manifest rows)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const url = new URL(req.url);
-    const tripId = url.searchParams.get('trip_id');
+    let tripId = url.searchParams.get('trip_id');
+    if (!tripId && req.method === 'POST') {
+      try { tripId = (await req.json()).trip_id; } catch { /* no body */ }
+    }
     if (!tripId || !/^[a-f0-9]{24}$/.test(tripId)) {
       return new Response('Invalid trip id', { status: 400 });
     }
