@@ -22,10 +22,10 @@ Read the attached image VERY carefully. Rules:
 4. id_number: exact characters, letters and digits, no spaces or dashes. Do not confuse it with dates, document/serial numbers on card edges, or the check digit.
 5. nationality: the full English country name (e.g. "Pakistan", not "PAK" or "Pakistani").
 6. gender: "Male" or "Female" based on the document. On passports, the MRZ line 2 position 21 is sex (M/F). On iqama/visa cards, look for "الجنس" / "Sex" / "Gender" field. If unclear, best guess from the name/photo.
-7. If a character is genuinely unreadable, choose the most likely one from context — never output placeholders like "X" or "?".
+7. NEVER invent, guess, or fabricate any value. Only output what is actually printed/encoded on the document. If a field is genuinely not visible or not present on the document, return it as an empty string "" — do not make up a name, number, or nationality, and do not add any extra fields beyond full_name, id_number, nationality, gender.
 
 Double-check digits 0/8, 1/7, 5/6 and letters O/0, I/1, S/5 against both the printed text and the MRZ before answering.
-Return ONLY the JSON object.`;
+Return ONLY the JSON object, with exactly the fields defined in the schema — no additional data.`;
 
 export async function uploadImageBuffer(base44, buffer, filename) {
   const file = new File([buffer], filename, { type: "image/jpeg" });

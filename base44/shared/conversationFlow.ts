@@ -149,7 +149,19 @@ async function processPhoto(base44, sessionEntityName, session, photoDownloader,
       return;
     }
 
-    const updatedPassengers = [...(session.passengers || []), passenger];
+    // Reject duplicates — same ID number (or same name if no ID was read)
+    // already collected in this session.
+    const existing = session.passengers || [];
+    const isDuplicate = existing.some((p) =>
+      (passenger.id_number && p.id_number && p.id_number === passenger.id_number) ||
+      (!passenger.id_number && passenger.name && p.name === passenger.name)
+    );
+    if (isDuplicate) {
+      await sendMessage(`⚠️ This passenger (${passenger.name || passenger.id_number}) was already added. Send the next photo or reply "done".`);
+      return;
+    }
+
+    const updatedPassengers = [...existing, passenger];
     const updatedPhotos = [...(session.photo_urls || []), fileUrl];
 
     await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
