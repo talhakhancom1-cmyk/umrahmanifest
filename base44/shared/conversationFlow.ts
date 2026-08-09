@@ -149,9 +149,13 @@ async function processPhoto(base44, sessionEntityName, session, photoDownloader,
       return;
     }
 
+    // Re-fetch the session so photos processed in parallel (a forwarded
+    // batch) see each other's additions instead of a stale list.
+    const fresh = await base44.asServiceRole.entities[sessionEntityName].get(session.id);
+    const existing = (fresh && fresh.passengers) || [];
+
     // Reject duplicates — same ID number (or same name if no ID was read)
     // already collected in this session.
-    const existing = session.passengers || [];
     const isDuplicate = existing.some((p) =>
       (passenger.id_number && p.id_number && p.id_number === passenger.id_number) ||
       (!passenger.id_number && passenger.name && p.name === passenger.name)
@@ -161,21 +165,25 @@ async function processPhoto(base44, sessionEntityName, session, photoDownloader,
       return;
     }
 
-    const updatedPassengers = [...existing, passenger];
-    const updatedPhotos = [...(session.photo_urls || []), fileUrl];
+    // Atomic append ($push) — a read-modify-write here loses passengers when
+    // several photos of a forwarded batch are processed at the same time.
+    await base44.asServiceRole.entities[sessionEntityName].updateMany(
+      { id: session.id },
+      { $push: { passengers: passenger, photo_urls: fileUrl } }
+    );
 
-    await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
-      passengers: updatedPassengers,
-      photo_urls: updatedPhotos
-    });
-
-    await sendMessage(`✅ Passenger ${updatedPassengers.length} added:\nName: ${passenger.name}\nID: ${passenger.id_number}\nNationality: ${passenger.nationality}\n\nSend the next photo or reply "done".`);
+    const count = existing.length + 1;
+    await sendMessage(`✅ Passenger ${count} added:\nName: ${passenger.name}\nID: ${passenger.id_number}\nNationality: ${passenger.nationality}\n\nSend the next photo or reply "done".`);
   } catch (e) {
     await sendMessage(`⚠️ Could not process this photo: ${e.message}\n\nPlease try sending it again.`);
   }
 }
 
 async function askRoute(base44, sessionEntityName, session, sendMessage) {
+  // Re-fetch: photos from a forwarded batch may still have been saving when
+  // "done" arrived — use the latest stored list, not the stale snapshot.
+  const fresh = await base44.asServiceRole.entities[sessionEntityName].get(session.id);
+  if (fresh) session = { ...session, passengers: fresh.passengers || [], photo_urls: fresh.photo_urls || [] };
   if (!session.passengers || session.passengers.length === 0) {
     await sendMessage('⚠️ No passengers collected yet. Please send at least one photo, then reply "done".');
     return;
