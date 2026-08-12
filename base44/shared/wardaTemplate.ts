@@ -89,9 +89,10 @@ function fitSpan(text, fits) {
 function box(colOrBox, bottom, text, extra) {
   const s = String(text);
   if (!s) return "";
-  const CHAR_W = 9.6; // avg px per char at 15px bold Arial
+  const CHAR_W = 11; // avg px per char at 15px bold Arial
   const est = s.length * CHAR_W;
-  const sx = est > colOrBox.width ? (colOrBox.width / est).toFixed(3) : "1";
+  const avail = colOrBox.width * 0.9; // margin so squeezed text stays off the cell borders
+  const sx = est > avail ? (avail / est).toFixed(3) : "1";
   return `<div class="b44-cell" style="position:absolute;left:${pct(colOrBox.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};width:${pct(colOrBox.width, PAGE_W)};` +
     `text-align:center;white-space:nowrap;overflow:visible;line-height:1.1;transform:scaleX(${sx});transform-origin:center center;` +
     `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:15px;color:#000;z-index:9${extra || ""}">${s}</div>`;
