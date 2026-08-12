@@ -10,7 +10,7 @@ import { appParams } from "@/lib/app-params";
 // Public manifest endpoints (service-role, no auth) — direct API path works
 // on any domain/device.
 const fnUrl = (name, id) =>
-  `/api/apps/${appParams.appId}/functions/${name}?trip_id=${id}`;
+  `/api/apps/${appParams.appId}/functions/${name}?trip_id=${id}&t=${Date.now()}`;
 
 export default function TripDocument() {
   const { id } = useParams();
@@ -24,12 +24,9 @@ export default function TripDocument() {
   // Load the manifest via the public manifestView function (service-role,
   // no auth required) through the SDK so it resolves the correct domain.
   useEffect(() => {
-    fetch(fnUrl("manifestView", id))
-      .then((res) => {
-        if (!res.ok) throw new Error("view failed");
-        return res.text();
-      })
-      .then(setHtml)
+    base44.functions
+      .invoke("manifestView", { trip_id: id })
+      .then((res) => setHtml(typeof res.data === "string" ? res.data : String(res.data)))
       .catch(() => {
         toast({ title: "Could not generate document", variant: "destructive" });
       });

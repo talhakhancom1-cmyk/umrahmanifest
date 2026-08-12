@@ -165,7 +165,7 @@ export function buildFromRawahilTemplate(templateHtml, trip) {
 
   // ---- Page 2: header + vehicle details ----
   if (driverIqama) p2 = replaceDivInner(p2, P2_IQAMA, driverIqama);
-  if (driverName) p2 = replaceDivInner(p2, P2_DRIVER, fit(driverName, 16));
+  if (driverName) p2 = replaceDivInner(p2, P2_DRIVER, fit(driverName, 12));
   if (plate) p2 = replaceDivInner(p2, P2_PLATE, plate);
   if (carModel) p2 = replaceDivInner(p2, P2_CAR, fit(carModel, 10));
   if (from && to) p2 = replaceDivInner(p2, P2_ROUTE, fit(`${from} TO ${to}`, 20));
