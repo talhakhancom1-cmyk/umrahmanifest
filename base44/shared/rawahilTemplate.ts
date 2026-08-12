@@ -1,3 +1,4 @@
+// Rawahil Al Bait manifest template builder.
 // Builds the trip document from the Rawahil Al Bait (SHIRKA RAWAHIL AL BAIT)
 // pdf2htmlEX template. 3 pages: p1 = Arabic contract, p2 = manifest (header +
 // vehicle details + passenger table, 13 rows), p3 = daily vehicle inspection log.

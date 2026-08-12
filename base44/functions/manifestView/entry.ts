@@ -4,7 +4,7 @@ import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 
 // Public document viewer: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
-// (v4: corrected Sharif template field mapping)
+// (v5: Rawahil template field injection)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
