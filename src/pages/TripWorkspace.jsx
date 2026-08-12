@@ -17,6 +17,7 @@ import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
 import DriversEditor from "@/components/trips/DriversEditor";
 import TemplatePanel from "@/components/trips/TemplatePanel";
+import ClearPassengersButton from "@/components/trips/ClearPassengersButton";
 
 export default function TripWorkspace() {
   const { id } = useParams();
@@ -81,6 +82,16 @@ export default function TripWorkspace() {
       })
       .catch(() => {});
     toast({ title: `Extracted ${passengers.length} passengers` });
+  };
+
+  const clearPassengers = async () => {
+    try {
+      await base44.entities.Trip.update(id, { passengers: [], photo_urls: [] });
+      setTrip({ ...trip, passengers: [], photo_urls: [] });
+      toast({ title: "All passengers cleared" });
+    } catch (e) {
+      toast({ title: "Could not clear passengers", variant: "destructive" });
+    }
   };
 
   if (!trip) {
@@ -237,7 +248,13 @@ export default function TripWorkspace() {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Passengers
             </h2>
-            <PhotoUploader onExtracted={onExtracted} />
+            <div className="flex items-center gap-2">
+              <ClearPassengersButton
+                count={(trip.passengers || []).length}
+                onClear={clearPassengers}
+              />
+              <PhotoUploader onExtracted={onExtracted} />
+            </div>
           </div>
           <PassengerTable
             passengers={trip.passengers || []}
