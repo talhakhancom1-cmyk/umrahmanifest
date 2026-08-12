@@ -121,12 +121,12 @@ function fit(text, fits) {
 
 function cell(col, bottom, text) {
   // Single line always: long values are squeezed horizontally to fit.
-  const CHAR_W = 13.2; // avg px per char at 20px bold Arial
+  const CHAR_W = 9.6; // avg px per char at 15px bold Arial
   const est = String(text).length * CHAR_W;
   const sx = est > col.width ? (col.width / est).toFixed(3) : "1";
   return `<div class="b44-cell" style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};width:${pct(col.width, PAGE_W)};` +
     `text-align:${col.align};white-space:nowrap;overflow:visible;line-height:1.1;transform:scaleX(${sx});transform-origin:center center;` +
-    `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:20px;color:#000;z-index:9">${text}</div>`;
+    `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:15px;color:#000;z-index:9">${text}</div>`;
 }
 
 export function buildFromRawahilTemplate(templateHtml, trip) {
