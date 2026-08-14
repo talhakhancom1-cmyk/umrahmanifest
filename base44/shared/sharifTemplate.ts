@@ -48,6 +48,8 @@ const P3_DATE = "m0 x7f h4 y2d ff4 fs1 fc0 sc0 ls4 ws0";
 const P3_TIME = "m0 x29 h4 y2d ff4 fs1 fc0 sc0 ls0 ws0";
 const P3_PLATE = "m0 x8d h4 y8a ff4 fs3 fc0 sc0 ls0 ws0";
 const P3_DRIVER = "m0 x74 h4 y8a ff4 fs3 fc0 sc0 ls0 ws0";
+// Baked sample driver name in the page-3 declaration footer ("SADAM HUSSAIN")
+const P3_DRIVER_FOOTER = "m0 x82 hc yb3 ff8 fs3 fc0 sc0 ls0 ws0";
 
 // Baked passenger-cell classes (rows 1-8) to blank before overlaying the
 // clean grid. Nationality/ID are ASCII but repeated per row; names carry
@@ -200,6 +202,9 @@ export function buildFromSharifTemplate(templateHtml, trip) {
   p3 = replaceDivInner(p3, P3_TIME, time);
   if (plate) p3 = replaceDivInner(p3, P3_PLATE, plate);
   if (driverName) p3 = replaceDivInner(p3, P3_DRIVER, fit(driverName, 13));
+  // Declaration footer: replace the baked sample driver name with the real
+  // one (or blank it when no driver is set).
+  p3 = replaceDivInner(p3, P3_DRIVER_FOOTER, driverName ? fit(driverName, 13) : " ");
 
   // ---- CSS overrides (same print-safe setup as the other templates) ----
   const extraCss = `
