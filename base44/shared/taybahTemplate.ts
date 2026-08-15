@@ -16,41 +16,34 @@ const P1_FROM         = "m0 x2 h3 y3 ff1 fs0 fc0 sc0 ls0 ws0"; // "Makkah"
 const P1_TO           = "m0 x3 h3 y4 ff1 fs0 fc0 sc0 ls0 ws0"; // "Riyadh"
 const P1_DATE         = "m0 x4 h4 y5 ff2 fs1 fc0 sc0 ls0 ws0"; // "15/8/2026"
 
-// ---- Page 2 (manifest) field classes ----
-const P2_IQAMA1 = "m0 x5 h5 y6 ff3 fs2 fc0 sc0 ls0 ws0";  // driver 1 iqama
-const P2_IQAMA2 = "m0 x5 h6 y7 ff3 fs3 fc0 sc0 ls0 ws0";  // driver 2 iqama
-const P2_PLATE  = "m0 x6 h7 y8 ff3 fs4 fc0 sc0 ls0 ws0";  // vehicle plate
+// Page geometry: the template page is 1860.75 x 2630.25 px, far wider than A4,
+// which is why it printed zoomed across 6 sheets. Scale it down to A4 width.
+const PAGE_ZOOM = (793.7 / 1860.75).toFixed(4); // ~0.4265
 
-// 9 baked passenger-name slots (vertical order)
+// ---- Page 2: 7 passenger rows (name + id), paired by measured row position ----
+// Driver names/iqamas and the plate are left exactly as the original PDF has them.
 const P2_PAX_NAMES = [
   "m0 x8 h9 ya ff3 fs5 fc0 sc0 ls0 ws0",
   "m0 x8 h9 yb ff3 fs5 fc0 sc0 ls0 ws0",
   "m0 x8 h9 yc ff3 fs5 fc0 sc0 ls0 ws0",
-  "m0 x9 ha yd ff3 fs6 fc0 sc0 ls0 ws0",
-  "m0 xa hb ye ff3 fs7 fc0 sc0 ls0 ws0",
   "m0 x8 h9 y10 ff3 fs5 fc0 sc0 ls0 ws0",
   "m0 x8 h9 y11 ff3 fs5 fc0 sc0 ls0 ws0",
   "m0 x8 h9 y12 ff3 fs5 fc0 sc0 ls0 ws0",
   "m0 xb hd y13 ff3 fs8 fc0 sc0 ls0 ws0"
 ];
 
-// 6 baked passenger-id slots (vertical order)
 const P2_PAX_IDS = [
   "m0 xc he y14 ff3 fs9 fc0 sc0 ls0 ws0",
   "m0 xd he y15 ff3 fs9 fc0 sc0 ls0 ws0",
   "m0 xd he y16 ff3 fs9 fc0 sc0 ls0 ws0",
   "m0 xd he y17 ff3 fs9 fc0 sc0 ls0 ws0",
   "m0 xd he y18 ff3 fs9 fc0 sc0 ls0 ws0",
-  "m0 xd he y19 ff3 fs9 fc0 sc0 ls0 ws0"
+  "m0 xd he y19 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xe he y1a ff3 fs9 fc0 sc0 ls0 ws0"
 ];
 
-const P2_MANIFEST_ID = "m0 xe he y1a ff3 fs9 fc0 sc0 ls0 ws0"; // "ID : 167"
-
 // ---- Page 3 (inspection log) field classes ----
-const P3_DRIVER  = "m0 xf hf y1b ff4 fsa fc0 sc0 ls0 ws0"; // driver 1 name
-const P3_PLATE   = "m0 x10 h7 y1c ff4 fs4 fc0 sc0 ls0 ws0"; // plate
-const P3_DATE    = "m0 x11 h10 y1d ff4 fsb fc0 sc0 ls0 ws0"; // date
-const P3_DRIVER2 = "m0 x12 h11 y1e ff4 fsc fc0 sc0 ls0 ws0"; // driver name (signature)
+const P3_DATE = "m0 x11 h10 y1d ff4 fsb fc0 sc0 ls0 ws0"; // date
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -91,12 +84,6 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   const secondParty = esc(t.second_party_name || "");
   const from = esc(t.route_from || "");
   const to = esc(t.route_to || "");
-  const iqama1 = esc(d1.iqama_no || "");
-  const iqama2 = esc(d2.iqama_no || "");
-  const plate = esc(t.vehicle_plate || "");
-  const driverName = esc(d1.name || "");
-  const driver2Name = esc(d2.name || driverName);
-
   let html = templateHtml;
 
   // ---- Page 1: contract (second party blanked when unset so no stale sample) ----
@@ -105,34 +92,15 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   if (to) html = replaceDivInner(html, P1_TO, fit(to, 14));
   if (date) html = replaceDivInner(html, P1_DATE, date);
 
-  // ---- Page 2: driver iqamas + plate ----
-  if (iqama1) html = replaceDivInner(html, P2_IQAMA1, iqama1);
-  if (iqama2) html = replaceDivInner(html, P2_IQAMA2, iqama2);
-  if (plate) html = replaceDivInner(html, P2_PLATE, plate);
-
-  // ---- Page 2: passenger names (up to 9) ----
+  // ---- Page 2: passenger rows (name + id paired on the same row, 7 rows) ----
   for (let i = 0; i < P2_PAX_NAMES.length; i++) {
     const p = passengers[i] || {};
-    const val = p.name ? esc(p.name) : " ";
-    html = replaceDivInner(html, P2_PAX_NAMES[i], fit(val, 22));
+    html = replaceDivInner(html, P2_PAX_NAMES[i], p.name ? fit(esc(p.name), 22) : " ");
+    html = replaceDivInner(html, P2_PAX_IDS[i], p.id_number ? fit(esc(p.id_number), 14) : " ");
   }
 
-  // ---- Page 2: passenger ids (up to 6) ----
-  for (let i = 0; i < P2_PAX_IDS.length; i++) {
-    const p = passengers[i] || {};
-    const val = p.id_number ? esc(p.id_number) : " ";
-    html = replaceDivInner(html, P2_PAX_IDS[i], val);
-  }
-
-  // ---- Page 2: manifest serial (use trip id suffix, else blank the number) ----
-  const serial = t.id ? String(t.id).slice(-6).toUpperCase() : "";
-  html = replaceDivInner(html, P2_MANIFEST_ID, "ID : " + serial);
-
-  // ---- Page 3: inspection log ----
-  if (driverName) html = replaceDivInner(html, P3_DRIVER, fit(driverName, 18));
-  if (plate) html = replaceDivInner(html, P3_PLATE, plate);
+  // ---- Page 3: inspection log date (driver + plate stay as in the original) ----
   if (date) html = replaceDivInner(html, P3_DATE, date);
-  if (driver2Name) html = replaceDivInner(html, P3_DRIVER2, fit(driver2Name, 18));
 
   // ---- CSS overrides (print-safe, same setup as the other templates) ----
   const extraCss = `
@@ -141,8 +109,10 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
+/* The source page is 1860px wide — scale it down so one page = one A4 sheet */
+.pf{zoom:${PAGE_ZOOM}}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}}
+@media print{@page{size:A4;margin:0}html,body{margin:0}.pf{zoom:${PAGE_ZOOM};page-break-after:always}}
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
