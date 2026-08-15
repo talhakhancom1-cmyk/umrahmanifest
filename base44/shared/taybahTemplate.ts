@@ -1,135 +1,151 @@
 // Muassasat Taybah Al-Fakhmah (مؤسسة طيبة الفخمة للنقل البرى) manifest builder.
-// Uses the company's uploaded scanned template (image PDF) as the background
-// and overlays trip data (date, driver, passengers, vehicle) on top at fixed
-// coordinates. Coordinates are expressed as percentages of the page and are
-// easy to fine-tune.
+// Uses the company's uploaded text-based pdf2htmlEX template and swaps each
+// dynamic field in-place by its pdf2htmlEX class string. 3 pages:
+//   p1 = Arabic contract (second party, route, date)
+//   p2 = manifest (driver iqamas, plate, passenger names + ids)
+//   p3 = inspection log (driver name, plate, date, signature)
+// The baked Arabic layout, branding and watermark are preserved.
 import { esc } from "./mscTemplate.ts";
 
-export const TAYBAH_TEMPLATE_URL = "taybah-fakhmah";
+export const TAYBAH_TEMPLATE_URL =
+  "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/493fa7704_template-1786817164344.txt";
 
-// Uploaded template (scanned image PDF wrapped as .txt)
-const TAYBAH_UPLOADED_URL =
-  "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/ebe2a02d9_template-1786807320060.txt";
+// ---- Page 1 (contract) field classes ----
+const P1_SECOND_PARTY = "m0 x1 h3 y2 ff1 fs0 fc0 sc0 ls0 ws0"; // "khalil and 7 members"
+const P1_FROM         = "m0 x2 h3 y3 ff1 fs0 fc0 sc0 ls0 ws0"; // "Makkah"
+const P1_TO           = "m0 x3 h3 y4 ff1 fs0 fc0 sc0 ls0 ws0"; // "Riyadh"
+const P1_DATE         = "m0 x4 h4 y5 ff2 fs1 fc0 sc0 ls0 ws0"; // "15/8/2026"
 
-let templateCache: string | null = null;
+// ---- Page 2 (manifest) field classes ----
+const P2_IQAMA1 = "m0 x5 h5 y6 ff3 fs2 fc0 sc0 ls0 ws0";  // driver 1 iqama
+const P2_IQAMA2 = "m0 x5 h6 y7 ff3 fs3 fc0 sc0 ls0 ws0";  // driver 2 iqama
+const P2_PLATE  = "m0 x6 h7 y8 ff3 fs4 fc0 sc0 ls0 ws0";  // vehicle plate
 
-async function fetchTemplate(): Promise<string> {
-  if (templateCache) return templateCache;
-  const res = await fetch(TAYBAH_UPLOADED_URL);
-  if (!res.ok) throw new Error("taybah template fetch failed: " + res.status);
-  templateCache = await res.text();
-  return templateCache;
+// 9 baked passenger-name slots (vertical order)
+const P2_PAX_NAMES = [
+  "m0 x8 h9 ya ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 x8 h9 yb ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 x8 h9 yc ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 x9 ha yd ff3 fs6 fc0 sc0 ls0 ws0",
+  "m0 xa hb ye ff3 fs7 fc0 sc0 ls0 ws0",
+  "m0 x8 h9 y10 ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 x8 h9 y11 ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 x8 h9 y12 ff3 fs5 fc0 sc0 ls0 ws0",
+  "m0 xb hd y13 ff3 fs8 fc0 sc0 ls0 ws0"
+];
+
+// 6 baked passenger-id slots (vertical order)
+const P2_PAX_IDS = [
+  "m0 xc he y14 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xd he y15 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xd he y16 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xd he y17 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xd he y18 ff3 fs9 fc0 sc0 ls0 ws0",
+  "m0 xd he y19 ff3 fs9 fc0 sc0 ls0 ws0"
+];
+
+const P2_MANIFEST_ID = "m0 xe he y1a ff3 fs9 fc0 sc0 ls0 ws0"; // "ID : 167"
+
+// ---- Page 3 (inspection log) field classes ----
+const P3_DRIVER  = "m0 xf hf y1b ff4 fsa fc0 sc0 ls0 ws0"; // driver 1 name
+const P3_PLATE   = "m0 x10 h7 y1c ff4 fs4 fc0 sc0 ls0 ws0"; // plate
+const P3_DATE    = "m0 x11 h10 y1d ff4 fsb fc0 sc0 ls0 ws0"; // date
+const P3_DRIVER2 = "m0 x12 h11 y1e ff4 fsc fc0 sc0 ls0 ws0"; // driver name (signature)
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Extract the first <image> base64 PNG from each .page div.
-function extractPageImages(html: string): string[] {
-  const images: string[] = [];
-  const pageRe = /<div\s+class="page"\s+id="page\d"[\s\S]*?<image[^>]*xlink:href="data:image\/png;base64,([^"]+)"/g;
-  let m: RegExpExecArray | null;
-  while ((m = pageRe.exec(html)) && images.length < 3) {
-    images.push("data:image/png;base64," + m[1]);
-  }
-  return images;
+// Replace the inner content of the FIRST div matching a full class string.
+function replaceDivInner(html: string, fullClass: string, newInner: string): string {
+  const cls = escapeRegex(fullClass);
+  return html.replace(
+    new RegExp('(<div class="t ' + cls + '"[^>]*>)[\\s\\S]*?(</div>)'),
+    "$1" + newInner + "$2"
+  );
 }
 
+// Template date style: "15/8/2026" (D/M/YYYY)
 function fmtDate(d: string): string {
   if (!d) return "";
   const dt = new Date(d + "T00:00:00");
-  if (isNaN(dt.getTime())) return d;
+  if (isNaN(dt.getTime())) return String(d);
   return `${dt.getDate()}/${dt.getMonth() + 1}/${dt.getFullYear()}`;
 }
 
-// Overlay a value: white box to cover baked text + the real value on top.
-// All positions are percentages [top, right, width, height] of the page.
-function overlay(top: number, right: number, width: number, height: number, value: string, extra = ""): string {
-  if (!value) return "";
-  return `<div style="position:absolute;top:${top}%;right:${right}%;width:${width}%;height:${height}%;display:flex;align-items:center;justify-content:center;background:#fff;color:#000;font-family:Arial,sans-serif;font-weight:700;font-size:13px;text-align:center;direction:ltr;${extra}">${value}</div>`;
+// Squeeze a value horizontally so long text stays inside its baked cell.
+function fit(text: string, fits: number): string {
+  const s = String(text);
+  if (s.length <= fits) return s;
+  const sx = (fits / s.length).toFixed(3);
+  return `<span style="display:inline-block;white-space:nowrap;transform:scaleX(${sx});transform-origin:left center">${s}</span>`;
 }
 
-const PAGE_CSS = `width:1240px;height:1754px;position:relative;background:#fff;background-size:100% 100%;background-repeat:no-repeat;margin:0 auto 20px;box-shadow:0 2px 12px rgba(0,0,0,.18);page-break-after:always;overflow:hidden;`;
-
-export async function buildFromTaybahTemplate(_templateHtml: string, trip: any): Promise<string> {
+export function buildFromTaybahTemplate(templateHtml: string, trip: any): string {
   const t = trip || {};
   const passengers = t.passengers || [];
   const drivers = t.drivers || [];
   const d1 = drivers[0] || {};
   const d2 = drivers[1] || {};
   const date = fmtDate(t.travel_date);
-  const time = esc(t.trip_time || "");
-  const plate = esc(t.vehicle_plate || "");
-  const carModel = esc(t.car_model || "");
   const secondParty = esc(t.second_party_name || "");
+  const from = esc(t.route_from || "");
+  const to = esc(t.route_to || "");
+  const iqama1 = esc(d1.iqama_no || "");
+  const iqama2 = esc(d2.iqama_no || "");
+  const plate = esc(t.vehicle_plate || "");
+  const driverName = esc(d1.name || "");
+  const driver2Name = esc(d2.name || driverName);
 
-  const html = await fetchTemplate();
-  const imgs = extractPageImages(html);
-  const img1 = imgs[0] || "";
-  const img2 = imgs[1] || "";
-  const img3 = imgs[2] || "";
+  let html = templateHtml;
 
-  // ===== PAGE 1: Contract — only the date is dynamic =====
-  // Date field sits on the right side below the title.
-  const p1 = `<div class="doc-page" style="${PAGE_CSS}background-image:url('${img1}')">
-    ${overlay(28, 10, 16, 3.2, date)}
-  </div>`;
+  // ---- Page 1: contract (second party blanked when unset so no stale sample) ----
+  html = replaceDivInner(html, P1_SECOND_PARTY, secondParty ? fit(secondParty, 24) : " ");
+  if (from) html = replaceDivInner(html, P1_FROM, fit(from, 14));
+  if (to) html = replaceDivInner(html, P1_TO, fit(to, 14));
+  if (date) html = replaceDivInner(html, P1_DATE, date);
 
-  // ===== PAGE 2: Driver table + passenger table =====
-  // Driver rows (up to 2). Columns (RTL): date | entity | iqama | name | plate | car type
-  // Row Y positions estimated from the scanned template.
-  const driverRow = (d: any, topY: number) => `
-    ${overlay(topY, 67, 13, 3.0, esc(d.iqama_no || ""))}
-    ${overlay(topY, 47, 19, 3.0, esc(d.name || ""), "font-size:11px")}
-    ${overlay(topY, 31, 14, 3.0, plate)}
-    ${overlay(topY, 16, 13, 3.0, carModel, "text-transform:uppercase")}
-  `;
-  const driverRows = driverRow(d1, 33) + (d2.name ? driverRow(d2, 37.5) : "");
-  // Date + entity on first row only
-  const tripHeader = `
-    ${overlay(33, 84, 13, 3.0, date)}
-    ${overlay(33, 97, 0, 0, "")}
-  `;
+  // ---- Page 2: driver iqamas + plate ----
+  if (iqama1) html = replaceDivInner(html, P2_IQAMA1, iqama1);
+  if (iqama2) html = replaceDivInner(html, P2_IQAMA2, iqama2);
+  if (plate) html = replaceDivInner(html, P2_PLATE, plate);
 
-  // Passenger rows (up to 14). Each row: number | name | passport.
-  const paxRows = passengers.map((p: any, i: number) => {
-    const topY = 50 + i * 3.5;
-    return `
-      ${overlay(topY, 92, 6, 3.0, String(i + 1))}
-      ${overlay(topY, 48, 42, 3.0, esc(p.name || ""), "font-size:11px")}
-      ${overlay(topY, 8, 38, 3.0, esc(p.id_number || ""))}
-    `;
-  }).join("");
-
-  const p2 = `<div class="doc-page" style="${PAGE_CSS}background-image:url('${img2}')">
-    ${tripHeader}
-    ${driverRows}
-    ${paxRows}
-  </div>`;
-
-  // ===== PAGE 3: Inspection log header (driver, plate, date, time) =====
-  const p3 = `<div class="doc-page" style="${PAGE_CSS}background-image:url('${img3}')">
-    ${overlay(17, 73, 22, 3.2, esc(d1.name || ""), "font-size:11px")}
-    ${overlay(17, 50, 18, 3.2, plate)}
-    ${overlay(17, 27, 18, 3.2, date)}
-    ${overlay(17, 8, 16, 3.2, `<span dir="ltr">${time}</span>`)}
-  </div>`;
-
-  return `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${esc(t.trip_name || "Trip Manifest")}</title>
-<style>
-  body{margin:0;padding:20px;background:#e8e8e8;font-family:Arial,Helvetica,sans-serif}
-  @media print{
-    body{background:#fff;padding:0}
-    .doc-page{box-shadow:none!important;margin:0!important;page-break-after:always}
+  // ---- Page 2: passenger names (up to 9) ----
+  for (let i = 0; i < P2_PAX_NAMES.length; i++) {
+    const p = passengers[i] || {};
+    const val = p.name ? esc(p.name) : " ";
+    html = replaceDivInner(html, P2_PAX_NAMES[i], fit(val, 22));
   }
-</style>
-</head>
-<body>
-${p1}
-${p2}
-${p3}
-</body>
-</html>`;
+
+  // ---- Page 2: passenger ids (up to 6) ----
+  for (let i = 0; i < P2_PAX_IDS.length; i++) {
+    const p = passengers[i] || {};
+    const val = p.id_number ? esc(p.id_number) : " ";
+    html = replaceDivInner(html, P2_PAX_IDS[i], val);
+  }
+
+  // ---- Page 2: manifest serial (use trip id suffix, else blank the number) ----
+  const serial = t.id ? String(t.id).slice(-6).toUpperCase() : "";
+  html = replaceDivInner(html, P2_MANIFEST_ID, "ID : " + serial);
+
+  // ---- Page 3: inspection log ----
+  if (driverName) html = replaceDivInner(html, P3_DRIVER, fit(driverName, 18));
+  if (plate) html = replaceDivInner(html, P3_PLATE, plate);
+  if (date) html = replaceDivInner(html, P3_DATE, date);
+  if (driver2Name) html = replaceDivInner(html, P3_DRIVER2, fit(driver2Name, 18));
+
+  // ---- CSS overrides (print-safe, same setup as the other templates) ----
+  const extraCss = `
+<style>
+#sidebar{display:none!important}
+#page-container{left:0!important}
+.loading-indicator{display:none!important}
+.t{overflow:visible!important}
+@media screen{.pc{display:block!important;opacity:1!important}}
+@media print{@page{size:A4;margin:0}}
+</style>`;
+  html = html.replace("</head>", extraCss + "\n</head>");
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
+
+  return html;
 }

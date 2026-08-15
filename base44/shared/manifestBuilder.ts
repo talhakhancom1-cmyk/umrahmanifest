@@ -28,7 +28,8 @@ const BUILDERS = {
 
 // Alias old non-http template identifiers to their real fetched URLs
 const URL_ALIASES = {
-  "tail-saeed-ibrahim-al-thubaiti": TAIL_SAEED_TEMPLATE_URL
+  "tail-saeed-ibrahim-al-thubaiti": TAIL_SAEED_TEMPLATE_URL,
+  "taybah-fakhmah": TAYBAH_TEMPLATE_URL
 };
 
 const templateCache = {};
