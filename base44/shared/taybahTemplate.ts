@@ -16,24 +16,27 @@ function fmtDate(d: string): string {
 }
 
 const HEADER_HTML = `
-  <div style="background:linear-gradient(135deg,#1a3a5c 0%,#2a5a8c 100%);color:#fff;padding:18px 30px 14px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 8px 8px">
-    <div>
-      <div style="font-size:28px;font-weight:900;font-family:'Arial',sans-serif;direction:rtl;letter-spacing:1px">مؤسسة طيبة الفخمة للنقل البرى</div>
-      <div style="font-size:16px;margin-top:4px;letter-spacing:2px;opacity:.9">س ت &nbsp;&nbsp;&nbsp; 4031310144</div>
-    </div>
-    <div style="background:#fff;border-radius:50%;width:72px;height:72px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <div style="text-align:center;line-height:1.1">
-        <div style="color:#1a3a5c;font-size:22px;font-weight:900;font-family:'Georgia',serif;font-style:italic">JK</div>
-        <div style="color:#1a3a5c;font-size:9px;font-weight:700">الفخمة</div>
-        <div style="color:#8b7a3a;font-size:8px">Luxury</div>
+  <div style="position:relative;background:#fff;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:96px;background:linear-gradient(90deg,#4a89a5 0%,#1a5f7a 100%);clip-path:polygon(0 0,100% 0,100% 72%,0 100%)"></div>
+    <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:16px 30px;direction:rtl">
+      <div style="color:#fff">
+        <div style="font-size:26px;font-weight:900;font-family:'Arial',sans-serif;letter-spacing:1px">مؤسسة طيبة الفخمة للنقل البرى</div>
+        <div style="font-size:15px;margin-top:4px;letter-spacing:2px;opacity:.95">س ت &nbsp;&nbsp; 4031310144</div>
+      </div>
+      <div style="background:#fff;border-radius:50%;width:68px;height:68px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15)">
+        <div style="text-align:center;line-height:1.1">
+          <div style="color:#1a5f7a;font-size:30px;font-weight:900;font-family:'Georgia',serif;font-style:italic">R</div>
+          <div style="color:#1a5f7a;font-size:9px;font-weight:700">الفخمة</div>
+          <div style="color:#8b7a3a;font-size:7px">Luxury</div>
+        </div>
       </div>
     </div>
   </div>`;
 
 const FOOTER_HTML = `
-  <div style="text-align:center;font-size:11px;color:#1a3a5c;border-top:2px solid #1a3a5c;padding-top:8px;margin-top:10px;direction:rtl">
-    <div style="font-size:13px;font-weight:700">الصمرة الجديدة &nbsp;-&nbsp; النوارية &nbsp;-&nbsp; مكة المكرمة &nbsp; 📍</div>
-    <div style="direction:ltr;margin-top:2px">Umrah Jadidah &nbsp;-&nbsp; An Nawaria &nbsp;-&nbsp; Makkah Al Mukarrmah &nbsp; 📍</div>
+  <div style="text-align:center;font-size:11px;color:#1a5f7a;border-top:2px solid #1a5f7a;padding-top:8px;margin-top:10px;direction:rtl">
+    <div style="font-size:13px;font-weight:700">العمرة الجديدة &nbsp;-&nbsp; النوارية &nbsp;-&nbsp; مكة المكرمة &nbsp; 📍</div>
+    <div style="direction:ltr;margin-top:2px">Umrah Jadidah &nbsp;-&nbsp; An Nawaria &nbsp;-&nbsp; Makkah Al Mukarramah &nbsp; 📍</div>
     <div style="margin-top:3px;font-weight:700">+966572491353</div>
   </div>`;
 
@@ -43,10 +46,10 @@ const PAGE_STYLE = `
   font-family:Arial,Helvetica,sans-serif;box-sizing:border-box;page-break-after:always;`;
 
 const TD = (content: string, extra = "") =>
-  `<td style="border:1px solid #1a3a5c;padding:5px 8px;text-align:center;${extra}">${content}</td>`;
+  `<td style="border:1px solid #1a5f7a;padding:5px 8px;text-align:center;${extra}">${content}</td>`;
 
 const TH = (content: string, extra = "") =>
-  `<td style="border:1px solid #1a3a5c;padding:5px 8px;text-align:center;background:#1a3a5c;color:#fff;font-weight:700;font-size:12px;${extra}">${content}</td>`;
+  `<td style="border:1px solid #1a5f7a;padding:5px 8px;text-align:center;background:#1a5f7a;color:#fff;font-weight:700;font-size:12px;${extra}">${content}</td>`;
 
 const CHECK = `<span style="font-size:14px">&#10003;</span>`;
 const BOX = `<span style="display:inline-block;width:14px;height:14px;border:1px solid #444;vertical-align:middle"></span>`;
@@ -83,7 +86,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
   <div style="padding:0 0 24px">
     ${HEADER_HTML}
     <div style="padding:18px 30px">
-      <h2 style="text-align:center;font-size:20px;direction:rtl;color:#1a3a5c;margin:0 0 18px">عقد نقل على الطريق البريه</h2>
+      <h2 style="text-align:center;font-size:20px;direction:rtl;color:#1a5f7a;margin:0 0 18px">عقد نقل على الطريق البريه</h2>
       <table style="width:100%;margin-bottom:14px;direction:rtl;font-size:13px">
         <tr><td style="width:120px;font-weight:700">تاريخ :</td><td>${date}</td></tr>
       </table>
@@ -91,7 +94,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
         <p>تم إبرام هذا العقد بين المتعاقدين بناء على المادة(39) التاسعه والثلاثون من اللائحه المنظمة للنشاط النقل المتخصص وتأجير وتوجيه الحافلات
         وبناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل إبرام عقد نقل مع الاطراف المحددين في المادة(40) قبل تنفيذ عمليات
         النقل على الطرق البرية بما لا يخالف أحكام هذه اللائحه ووفقاً للتاليه التي تحددها هنة النقل. وبناء على ما سبق تم إبرام عقد بين الاطراف الاتيه:</p>
-        <p><strong>لطرف الاول :</strong> - مؤسسة طيبة الفخمة للنقل البرى &nbsp;&nbsp; س ت &nbsp;&nbsp; 4031310144</p>
+        <p><strong>الطرف الاول :</strong> - مؤسسة طيبة الفخمة للنقل البرى &nbsp;&nbsp; س ت &nbsp;&nbsp; 4031310144</p>
         <p><strong>الطرف الثاني :</strong> - ${secondParty}</p>
         <p>اتفق الطرفان على أن ينفذ الطرف الاول عمليه نقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقا من الطرف الثاني وتوصيلاهم الى الجهه المحدده .بالعقد</p>
         <p><strong>النقل من :</strong> - ${from}</p>
@@ -124,7 +127,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
   <div style="padding:0 0 18px">
     ${HEADER_HTML}
     <div style="padding:14px 30px">
-      <h2 style="text-align:center;font-size:18px;direction:rtl;color:#1a3a5c;margin:0 0 12px">بيانات الركاب</h2>
+      <h2 style="text-align:center;font-size:18px;direction:rtl;color:#1a5f7a;margin:0 0 12px">بيانات الركاب</h2>
       <table style="width:100%;border-collapse:collapse;margin-bottom:12px;direction:rtl">
         <tr>
           ${TH("التاريخ")}
@@ -155,7 +158,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
           ${TD(esc(d2.iqama_no || ""), "font-weight:700")}
         </tr>` : ""}
       </table>
-      <h3 style="text-align:center;color:#1a3a5c;direction:rtl;font-size:15px;margin:10px 0 8px">معلومات اضبيوف</h3>
+      <h3 style="text-align:center;color:#1a5f7a;direction:rtl;font-size:15px;margin:10px 0 8px">معلومات الضيوف</h3>
       <table style="width:100%;border-collapse:collapse;direction:rtl;font-size:12px">
         <tr>
           ${TH("الرقم", "width:36px")}
@@ -202,7 +205,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
   <div style="padding:0 0 18px">
     ${HEADER_HTML}
     <div style="padding:14px 30px">
-      <h2 style="text-align:center;color:#1a3a5c;direction:rtl;font-size:16px;margin:0 0 4px">سجل الفحص اليومي للسيارة</h2>
+      <h2 style="text-align:center;color:#1a5f7a;direction:rtl;font-size:16px;margin:0 0 4px">سجل الفحص اليومي للسيارة</h2>
       <h3 style="text-align:center;color:#444;font-size:13px;margin:0 0 14px">Daily vehicle inspection log</h3>
       <table style="width:100%;border-collapse:collapse;margin-bottom:14px;direction:rtl;font-size:12px">
         <tr>
@@ -215,7 +218,7 @@ export function buildFromTaybahTemplate(_templateHtml: string, trip: any): strin
           ${TD(esc(d1.name || ""), "font-weight:700;font-size:13px")}
           ${TD(plate, "font-weight:700")}
           ${TD(date, "font-weight:700")}
-          ${TD(time || "05:00 AM", "font-weight:700")}
+          ${TD(`<span dir="ltr">${time || "05:00 AM"}</span>`, "font-weight:700")}
         </tr>
       </table>
 
