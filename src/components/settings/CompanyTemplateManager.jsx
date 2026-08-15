@@ -46,6 +46,7 @@ function AssetField({ label, value, onChange }) {
 }
 
 function TemplateField({ value, onChange }) {
+  const { toast } = useToast();
   const ref = useRef(null);
   const [uploading, setUploading] = useState(false);
   const upload = async (e) => {
@@ -53,10 +54,19 @@ function TemplateField({ value, onChange }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // The platform's file storage blocks .html uploads (XSS protection),
+      // so rewrap the file as .txt — the manifest builder reads it as text
+      // regardless of extension.
+      const buf = await file.arrayBuffer();
+      const wrapped = new File([buf], `template-${Date.now()}.txt`, { type: "text/plain" });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: wrapped });
       onChange(file_url);
+      toast({ title: "Template uploaded" });
+    } catch (err) {
+      toast({ title: "Upload failed", description: String(err?.message || err), variant: "destructive" });
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
   return (
