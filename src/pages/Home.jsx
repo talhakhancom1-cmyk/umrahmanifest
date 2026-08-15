@@ -47,7 +47,8 @@ export default function Home() {
           "vehicle_plate",
           "car_model",
           "drivers",
-          "second_party_name"
+          "second_party_name",
+          "template_url"
         ].forEach((k) => {
           prefill[k] = latest[k];
         });
