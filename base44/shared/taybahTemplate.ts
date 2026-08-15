@@ -45,6 +45,34 @@ const P2_PAX_IDS = [
 // ---- Page 3 (inspection log) field classes ----
 const P3_DATE = "m0 x11 h10 y1d ff4 fsb fc0 sc0 ls0 ws0"; // date
 
+// The template page carries a full-page background raster that still shows the
+// original sample passenger names/ids, so those two columns are masked white
+// (row by row, inside the grid lines) before our values are drawn on top.
+const PAGE_W = 1860.75;
+const PAGE_H = 2630.25;
+// Row grid lines start at y=986 with a 79.7px pitch; masks stay inside the
+// lines so the printed table borders survive.
+const ROW_LINE0 = 986;
+const ROW_PITCH = 79.7;
+const ROW_COUNT = 7;
+const MASK_COLS = [
+  { left: 55, width: 895 },   // id / passport column interior
+  { left: 972, width: 690 }   // name column interior
+];
+
+function buildPaxMask(): string {
+  const pctW = (v: number) => (v / PAGE_W * 100).toFixed(4) + "%";
+  const pctH = (v: number) => (v / PAGE_H * 100).toFixed(4) + "%";
+  let rects = "";
+  for (let i = 0; i < ROW_COUNT; i++) {
+    const top = ROW_LINE0 + i * ROW_PITCH + 4;
+    for (const col of MASK_COLS) {
+      rects += `<div style="position:absolute;left:${pctW(col.left)};top:${pctH(top)};width:${pctW(col.width)};height:${pctH(71)};background:#fff"></div>`;
+    }
+  }
+  return `<div class="b44-mask" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:2">${rects}</div>`;
+}
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -92,6 +120,16 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   if (to) html = replaceDivInner(html, P1_TO, fit(to, 14));
   if (date) html = replaceDivInner(html, P1_DATE, date);
 
+  // ---- Page 2: white out the baked passenger cells drawn in the page raster ----
+  const p2Idx = html.indexOf('<div id="pf2"');
+  if (p2Idx >= 0) {
+    const before = html.slice(0, p2Idx);
+    // insert right AFTER the page's background raster so the mask paints over
+    // it, while all text divs (which follow) still paint above the mask
+    const after = html.slice(p2Idx).replace(/(<img\b[^>]*>)/, "$1" + buildPaxMask());
+    html = before + after;
+  }
+
   // ---- Page 2: passenger rows (name + id paired on the same row, 7 rows) ----
   for (let i = 0; i < P2_PAX_NAMES.length; i++) {
     const p = passengers[i] || {};
@@ -109,6 +147,8 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
+/* keep the white masks above the page raster, and all text above the masks */
+
 /* The source page is 1860px wide — scale it down so one page = one A4 sheet */
 .pf{zoom:${PAGE_ZOOM}}
 @media screen{.pc{display:block!important;opacity:1!important}}
