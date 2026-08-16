@@ -287,7 +287,7 @@ async function handleDateTime(base44, sessionEntityName, session, rawText, sendM
 }
 
 async function askCompany(base44, sessionEntityName, session, sendMessage) {
-  const companies = await base44.asServiceRole.entities.CompanyTemplate.filter({ is_active: true }, "-updated_date", 10);
+  const companies = await base44.asServiceRole.entities.CompanyTemplate.filter({ is_active: true }, "-updated_date", 50);
   if (!companies.length) {
     await sendMessage("⚠️ No company template configured. Please add one in the app Settings page first.");
     return;
