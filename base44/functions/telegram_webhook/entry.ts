@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.38";
+// company menu now lists up to 50 companies (was 10)
 import { handleTextUpdate, handlePhotoUpdate } from "../../shared/conversationFlow.ts";
 
 const TG_API = "https://api.telegram.org/bot";
