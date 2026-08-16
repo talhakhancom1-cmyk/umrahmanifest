@@ -157,5 +157,8 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
 
+  // version marker so we can confirm the live deploy picked up this builder
+  html = html.replace("<body>", "<body><!--b44-taybah-v7-->");
+
   return html;
 }

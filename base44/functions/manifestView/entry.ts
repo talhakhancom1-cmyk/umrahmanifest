@@ -4,17 +4,18 @@ import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 
 // Public document viewer: GET ?trip_id=<id>
 // The trip id acts as an unguessable access token (used in Telegram links).
-// (v5: Rawahil template field injection)
+// (v6: Taybah template field injection — passenger/date/second-party wiring)
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const url = new URL(req.url);
     let tripId = url.searchParams.get('trip_id');
-    if (!tripId && req.method === 'POST') {
-      try { tripId = (await req.json()).trip_id; } catch { /* no body */ }
+    let check = url.searchParams.get('check');
+    if (req.method === 'POST') {
+      try { const b = await req.json(); if (!tripId) tripId = b.trip_id; if (!check) check = b.check; } catch { /* no body */ }
     }
     if (!tripId || !/^[a-f0-9]{24}$/.test(tripId)) {
-      return new Response('Invalid trip id', { status: 400 });
+      return new Response('Invalid trip id [b44-v7]', { status: 400 });
     }
 
     const trip = await base44.asServiceRole.entities.Trip.get(tripId);
@@ -33,6 +34,23 @@ Deno.serve(async (req) => {
       const hide = ['1', '2', '3'].filter((p) => p !== page)
         .map((p) => `#pf${p}{display:none!important}`).join('');
       html = html.replace('</head>', `<style>${hide}</style></head>`);
+    }
+
+    // EARLY marker so we can confirm the latest code runs via the test runner
+    if (url.searchParams.get('check') === 'v7') {
+      const has = (s) => html.includes(s);
+      return Response.json({
+        mv: 'v7',
+        taybahMarker: has('b44-taybah-v7'),
+        secondParty: has('Ahmad Group'),
+        date: has('20/8/2026'),
+        paxAhmad: has('Ahmad Raza'),
+        paxBilal: has('Bilal Hussain'),
+        paxRubab: has('Rubab Fatima'),
+        sampleKhalil: has('khalil and 7 members'),
+        sampleOldDate: has('15/8/2026'),
+        zoomCss: has('zoom:0.4265')
+      });
     }
 
     return new Response(html, {
