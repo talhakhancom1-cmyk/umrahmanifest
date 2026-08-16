@@ -41,6 +41,10 @@
     "company_id": {
       "type": "string"
     },
+    "company_page": {
+      "type": "number",
+      "default": 0
+    },
     "driver_menu": {
       "type": "array",
       "items": {

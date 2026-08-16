@@ -286,29 +286,64 @@ async function handleDateTime(base44, sessionEntityName, session, rawText, sendM
   await askCompany(base44, sessionEntityName, updatedSession, sendMessage);
 }
 
-async function askCompany(base44, sessionEntityName, session, sendMessage) {
-  const companies = await base44.asServiceRole.entities.CompanyTemplate.filter({ is_active: true }, "-updated_date", 50);
+// Companies are paginated (8 per page) so the menu scales as more are added —
+// MSC and any future company always stays reachable instead of being cut off.
+const COMPANY_PAGE_SIZE = 8;
+
+async function askCompany(base44, sessionEntityName, session, sendMessage, page = 0) {
+  const companies = await base44.asServiceRole.entities.CompanyTemplate.filter({ is_active: true }, "-updated_date", 200);
   if (!companies.length) {
     await sendMessage("⚠️ No company template configured. Please add one in the app Settings page first.");
     return;
   }
-  const menu = companies.map((c, i) => `${i + 1}. ${c.name}`);
+  const pageCount = Math.max(1, Math.ceil(companies.length / COMPANY_PAGE_SIZE));
+  if (page < 0) page = 0;
+  if (page >= pageCount) page = pageCount - 1;
   await base44.asServiceRole.entities[sessionEntityName].update(session.id, {
     state: "awaiting_company",
-    company_menu: companies.map((c) => c.id)
+    company_menu: companies.map((c) => c.id),
+    company_page: page
   });
-  await sendMessage(`🏢 *Step 3 of 4 — Company*\n\n${menu.join("\n")}\n\nTap a button or reply with a number.`, {
+  const start = page * COMPANY_PAGE_SIZE;
+  const slice = companies.slice(start, start + COMPANY_PAGE_SIZE);
+  const menu = slice.map((c, i) => `${start + i + 1}. ${c.name}`);
+  const header = `🏢 *Step 3 of 4 — Company* (page ${page + 1}/${pageCount})\n\nShowing ${start + 1}–${start + slice.length} of ${companies.length}\n\n${menu.join("\n")}`;
+  const navRow = [];
+  if (page > 0) navRow.push({ text: "⬅️ Back", data: `pg${page - 1}` });
+  if (page < pageCount - 1) navRow.push({ text: "➡️ More", data: `pg${page + 1}` });
+  const inline = slice.map((c, i) => [{ text: `🏢 ${start + i + 1}. ${c.name}`, data: String(start + i + 1) }]);
+  if (navRow.length) inline.push(navRow);
+  const keyboard = [...slice.map((c, i) => `${start + i + 1}. ${c.name}`)];
+  if (page > 0) keyboard.push("back");
+  if (page < pageCount - 1) keyboard.push("more");
+  await sendMessage(`${header}\n\nTap a button, reply with any number (1–${companies.length}), or use More/Back.`, {
     markdown: true,
-    inline: companies.map((c, i) => [{ text: `🏢 ${c.name}`, data: String(i + 1) }]),
-    keyboard: menu
+    inline,
+    keyboard
   });
 }
 
 async function handleCompanySelection(base44, sessionEntityName, session, text, sendMessage, appId, sendDocument) {
-  const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
+  const lower = text.toLowerCase().trim();
   const ids = session.company_menu || [];
+  const curPage = Number(session.company_page || 0);
+  // Pagination navigation (re-renders the company menu at another page)
+  const pg = lower.match(/^pg(\d+)$/);
+  if (pg) {
+    await askCompany(base44, sessionEntityName, session, sendMessage, parseInt(pg[1], 10));
+    return;
+  }
+  if (lower === "more" || lower === "next" || lower === "التالي") {
+    await askCompany(base44, sessionEntityName, session, sendMessage, curPage + 1);
+    return;
+  }
+  if (lower === "back" || lower === "prev" || lower === "السابق") {
+    await askCompany(base44, sessionEntityName, session, sendMessage, curPage - 1);
+    return;
+  }
+  const num = parseInt((text.match(/^(\d+)/) || [])[1], 10);
   if (!num || num < 1 || num > ids.length) {
-    await sendMessage(`Please pick a number between 1 and ${ids.length}.`);
+    await sendMessage(`Please pick a number between 1 and ${ids.length}, or use More/Back.`);
     return;
   }
   const companyId = ids[num - 1];

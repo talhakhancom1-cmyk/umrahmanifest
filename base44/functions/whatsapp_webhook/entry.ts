@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.38";
 import { sendWhatsAppMessage, getMediaUrl, downloadMedia } from "./util.ts";
-// company menu now lists up to 50 companies (was 10)
+// company menu is paginated (8/page) so all companies, incl. MSC, always show
 import { handleTextUpdate, handlePhotoUpdate } from "../../shared/conversationFlow.ts";
 
 Deno.serve(async (req) => {
