@@ -356,7 +356,7 @@ async function handleCompanySelection(base44, sessionEntityName, session, text, 
 
 async function askDriver(base44, sessionEntityName, session, sendMessage, appId, sendDocument) {
   // Saved driver profiles first
-  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 8);
+  const saved = await base44.asServiceRole.entities.Driver.filter({ is_active: true }, "-updated_date", 50);
   let drivers = saved.map((d) => ({
     name: d.name,
     iqama_no: d.iqama_no || "",
