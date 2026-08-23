@@ -33,9 +33,17 @@ const PAX_COL = {
 
 // Sample values baked into the Arabic contract page
 const SAMPLE_DATE_AR = "23-08-2026";
-const SAMPLE_ROUTE_TO = "Madinah";
-const SAMPLE_ROUTE_FROM = "Jaddah";
 const SAMPLE_SECOND_PARTY = "Umar";
+
+// Arabic contract page: the route lines are blank in the template, so we place
+// the values just left of each label (RTL page, coordinates from the template).
+const AR_FROM = { left: 700, bottom: 800.4 };  // النقل من :
+const AR_TO = { left: 700, bottom: 764.4 };    // وصولاً إلى :
+
+function arCell(pos: { left: number; bottom: number }, value: string): string {
+  if (!value) return "";
+  return `<div class="t m0 ha ff2 fs1 fc1 sc0 ls0 ws0" style="left:${pos.left}px;bottom:${pos.bottom}px"><span dir="ltr">${value}</span></div>`;
+}
 
 // A positioned value div using the template's own font + geometry classes.
 function cell(x: string, y: string, value: string, fits = 0): string {
@@ -82,10 +90,17 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
   let html = templateHtml;
 
   // ---- Arabic contract page ----
-  html = html.split(SAMPLE_DATE_AR).join(dateAr || SAMPLE_DATE_AR);
-  html = html.split(SAMPLE_ROUTE_TO).join(routeTo || SAMPLE_ROUTE_TO);
-  html = html.split(SAMPLE_ROUTE_FROM).join(routeFrom || SAMPLE_ROUTE_FROM);
+  const dateLine = dateAr ? (t.trip_time ? `${dateAr} - ${esc(t.trip_time)}` : dateAr) : SAMPLE_DATE_AR;
+  html = html.split(SAMPLE_DATE_AR).join(dateLine);
   html = html.split(SAMPLE_SECOND_PARTY).join(secondParty || " ");
+
+  const arCells = arCell(AR_FROM, routeFrom) + arCell(AR_TO, routeTo);
+  const p2Idx = html.indexOf('<div id="pf2"');
+  if (p2Idx >= 0 && arCells) {
+    const before = html.slice(0, p2Idx);
+    const after = html.slice(p2Idx).replace(/(<img\b[^>]*>)/, "$1" + arCells);
+    html = before + after;
+  }
 
   // ---- Page 1 values ----
   let cells = "";
