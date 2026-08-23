@@ -27,7 +27,7 @@ const PAX_ROWS = [
   "m0 x6 h3 y10 ff2 fs1 fc2 sc0 ls0 ws0",
   "m0 x6 h3 y11 ff2 fs1 fc2 sc0 ls0 ws0",
   "m0 x6 h3 y12 ff2 fs1 fc2 sc0 ls0 ws0",
-  "m0 x6 h3 y13 ff2 fs1 fc2 sc0 ls0 ws0"
+  "m0 x7 h3 y13 ff2 fs1 fc2 sc0 ls0 ws0"
 ];
 
 // Sample values baked into the template (replaced on the Arabic page)
