@@ -36,6 +36,55 @@ const SAMPLE_ROUTE_TO = "Madinah";   // Arabic route-to label (passenger rows us
 const SAMPLE_ROUTE_FROM = "Jaddah"; // Arabic route-from label
 const SAMPLE_SECOND_PARTY = "Umar";  // Arabic second-party name
 
+// ---- Page 1 background raster masking ----
+// The template page carries a full-page PNG of the ORIGINAL filled document,
+// so the sample driver / plate / date / passenger rows keep showing through
+// behind our text. We white out both table interiors and redraw the outer
+// border + row separators, so only our values remain visible.
+const PAGE_W = 893.25;
+const PAGE_H = 1263;
+const TABLE_LEFT = 24;
+const TABLE_RIGHT = 876;
+
+// Header table: 5 rows at .y7 (lowest) .. .y3, pitch from the y-class values.
+const HDR_BOTTOM = 788.5875;
+const HDR_PITCH = 39.825;
+const HDR_ROWS = 5;
+
+// Passenger table body: 10 rows at .y13 (lowest) .. .ya.
+const PAX_BOTTOM = 288.834;
+const PAX_PITCH = 35.325;
+const PAX_ROW_COUNT = 10;
+
+const pw = (v: number) => (v / PAGE_W * 100).toFixed(4) + "%";
+const ph = (v: number) => (v / PAGE_H * 100).toFixed(4) + "%";
+
+function maskedTable(bottom: number, pitch: number, rows: number): string {
+  const left = TABLE_LEFT;
+  const width = TABLE_RIGHT - TABLE_LEFT;
+  const height = pitch * rows;
+  const b = bottom - 5;
+  let out =
+    `<div style="position:absolute;left:${pw(left)};bottom:${ph(b)};width:${pw(width)};height:${ph(height)};` +
+    `background:#fff;border:1px solid #111;box-sizing:border-box"></div>`;
+  // row separators (skip the outermost, already drawn by the border)
+  for (let i = 1; i < rows; i++) {
+    out +=
+      `<div style="position:absolute;left:${pw(left)};bottom:${ph(b + i * pitch)};width:${pw(width)};` +
+      `height:1px;background:#111"></div>`;
+  }
+  return out;
+}
+
+function buildPage1Mask(): string {
+  return (
+    `<div class="b44-mask" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:2">` +
+    maskedTable(HDR_BOTTOM, HDR_PITCH, HDR_ROWS) +
+    maskedTable(PAX_BOTTOM, PAX_PITCH, PAX_ROW_COUNT) +
+    `</div>`
+  );
+}
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -131,6 +180,16 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
     }
   }
 
+  // ---- Page 1: white out the baked sample data drawn in the page raster ----
+  // Inserted right AFTER the page's background image so the mask paints over
+  // it, while every text div (which follows in the DOM) still paints on top.
+  const p1Idx = html.indexOf('<div id="pf1"');
+  if (p1Idx >= 0) {
+    const before = html.slice(0, p1Idx);
+    const after = html.slice(p1Idx).replace(/(<img\b[^>]*>)/, "$1" + buildPage1Mask());
+    html = before + after;
+  }
+
   // ---- CSS overrides (print-safe, A4) ----
   const extraCss = `
 <style>
@@ -143,7 +202,7 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
-  html = html.replace("<body>", "<body><!--b44-talab-v1-->");
+  html = html.replace("<body>", "<body><!--b44-talab-v2-->");
 
   return html;
 }
