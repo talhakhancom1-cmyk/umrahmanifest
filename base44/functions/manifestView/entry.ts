@@ -55,7 +55,14 @@ Deno.serve(async (req) => {
 
     return new Response(html, {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        // Manifests are regenerated per trip edit — never let a browser or
+        // edge layer serve a previous render of the same trip id.
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     return new Response('Error: ' + error.message, { status: 500 });
