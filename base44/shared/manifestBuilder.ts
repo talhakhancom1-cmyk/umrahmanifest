@@ -11,6 +11,7 @@ import { buildFromSharifTemplate, SHARIF_TEMPLATE_URL } from "./sharifTemplate.t
 import { buildFromRawahilTemplate, RAWAHIL_TEMPLATE_URL } from "./rawahilTemplate.ts";
 import { buildFromWardaTemplate, WARDA_TEMPLATE_URL } from "./wardaTemplate.ts";
 import { buildFromTaybahTemplate, TAYBAH_TEMPLATE_URL } from "./taybahTemplate.ts";
+import { buildFromTalabTemplate, TALAB_TEMPLATE_URL } from "./talabTemplate.ts";
 
 const BUILDERS = {
   [MSC_TEMPLATE_URL]: buildFromMscTemplate,
@@ -23,7 +24,8 @@ const BUILDERS = {
   [SHARIF_TEMPLATE_URL]: buildFromSharifTemplate,
   [RAWAHIL_TEMPLATE_URL]: buildFromRawahilTemplate,
   [WARDA_TEMPLATE_URL]: buildFromWardaTemplate,
-  [TAYBAH_TEMPLATE_URL]: buildFromTaybahTemplate
+  [TAYBAH_TEMPLATE_URL]: buildFromTaybahTemplate,
+  [TALAB_TEMPLATE_URL]: buildFromTalabTemplate
 };
 
 // Alias old non-http template identifiers to their real fetched URLs
