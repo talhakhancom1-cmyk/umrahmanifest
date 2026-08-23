@@ -31,7 +31,11 @@ const BUILDERS = {
 // Alias old non-http template identifiers to their real fetched URLs
 const URL_ALIASES = {
   "tail-saeed-ibrahim-al-thubaiti": TAIL_SAEED_TEMPLATE_URL,
-  "taybah-fakhmah": TAYBAH_TEMPLATE_URL
+  "taybah-fakhmah": TAYBAH_TEMPLATE_URL,
+  // Al Talab: first upload had sample data baked into the page image —
+  // point old trips at the blank template.
+  "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/c83e4c40d_trip_148487_company_a.html":
+    TALAB_TEMPLATE_URL
 };
 
 const templateCache = {};
