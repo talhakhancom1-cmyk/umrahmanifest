@@ -22,7 +22,7 @@ const PAX_ROW_TOPS = [609, 638, 668, 700, 728, 759, 787, 818, 849, 881, 911, 941
 const PAX_COLS = { nat: [2, 296], id: [302, 196], name: [502, 348] };
 
 function mask(xPx: number, topPx: number, wPx: number, hPx: number): string {
-  return `<div style="position:absolute;left:${pt(xPx)}pt;bottom:${PAGE_H_PT - pt(topPx + hPx)}pt;width:${pt(wPx)}pt;height:${pt(hPx)}pt;background:#fff;z-index:5"></div>`;
+  return `<div style="position:absolute;left:${pt(xPx)}pt;bottom:${PAGE_H_PT - pt(topPx + hPx)}pt;width:${pt(wPx)}pt;height:${pt(hPx)}pt;background:#fff;z-index:8"></div>`;
 }
 
 function text(
@@ -97,6 +97,9 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
 #sidebar{display:none!important}
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
+/* Sample data baked into page 2's text layer (driver/vehicle values, trip
+   values and the 12 passenger rows) — removed so only our data shows. */
+#i41,#i35,#i33,#i25,#i24,#i23,#i22,#i21,#i20,#i19,#i18,#i17,#i16,#i15{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
 @media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}}
 </style>`;
