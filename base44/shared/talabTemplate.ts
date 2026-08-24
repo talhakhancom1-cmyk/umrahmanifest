@@ -118,11 +118,11 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
     const p = passengers[i];
     if (!p || !p.name) continue;
     const y = PAX_ROW_Y[i];
-    cells += cell(PAX_COL.name, y, esc(p.name), 22);
-    cells += cell(PAX_COL.id, y, esc(p.id_number || ""), 18);
-    cells += cell(PAX_COL.nationality, y, esc(p.nationality || ""), 12);
-    cells += cell(PAX_COL.from, y, routeFrom, 10);
-    cells += cell(PAX_COL.to, y, routeTo, 10);
+    cells += cell(PAX_COL.name, y, esc(p.name), 16);
+    cells += cell(PAX_COL.id, y, esc(p.id_number || ""), 14);
+    cells += cell(PAX_COL.nationality, y, esc(p.nationality || ""), 10);
+    cells += cell(PAX_COL.from, y, routeFrom, 8);
+    cells += cell(PAX_COL.to, y, routeTo, 8);
   }
 
   // Injected right after the page background image so the values sit on top.
