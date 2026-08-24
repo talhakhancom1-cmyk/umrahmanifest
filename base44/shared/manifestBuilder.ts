@@ -37,7 +37,10 @@ const URL_ALIASES = {
   // Al Talab: first upload had sample data baked into the page image —
   // point old trips at the blank template.
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/c83e4c40d_trip_148487_company_a.html":
-    TALAB_TEMPLATE_URL
+    TALAB_TEMPLATE_URL,
+  // Mehdullah: first upload had sample data baked in — use the blank template.
+  "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/c3dd01e3f_MEHDULLAH.html":
+    MEHDULLAH_TEMPLATE_URL
 };
 
 const templateCache = {};

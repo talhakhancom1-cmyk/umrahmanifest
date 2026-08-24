@@ -1,29 +1,33 @@
 import { esc } from "./mscTemplate.ts";
 
+// Blank Al-Fakhama (MEHDULLAH) template — no sample data baked in, so we only
+// draw our own values on top of the printed grid.
 export const MEHDULLAH_TEMPLATE_URL =
-  "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/c3dd01e3f_MEHDULLAH.html";
+  "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/08416a837_MEHD_ULLAH_edited.html";
 
-// Al-Fakhama (MEHDULLAH) template. Its text is stored with private-use glyph
-// encoding, so sample values can't be string-replaced. Instead we white-mask
-// each data cell on page 2 and draw our own text on top, using coordinates
-// measured from the rendered page (893 x 1263 px) converted to the template's
-// own pt coordinate system.
+// Page 2 geometry. Rendered page is 892.98 x 1262.88 px = 793.76 x 1122.56 pt.
 const SCALE = 1.125;
-const PAGE_H_PT = 1122.666667;
+const PAGE_H_PT = 1122.560093;
 const pt = (px: number) => px / SCALE;
 
-// Page-2 data cells, in rendered px: [x, width]
+// Header blocks, measured in rendered px: [x, width]
 const DRIVER_CELL = [2, 704];
 const VEH_ROW_TOP = 284;
-const VEH_COLS = [[2, 296], [302, 196], [502, 206], [712, 171]]; // plate, model, iqama, mobile
+const VEH_COLS = [[2, 296], [302, 196], [502, 206]]; // plate, model, iqama
 const TRIP_ROW_TOP = 456;
-const TRIP_COLS = [[2, 196], [202, 146], [352, 146], [502, 381]]; // date, time, trip no, destination
-const PAX_ROW_TOPS = [609, 638, 668, 700, 728, 759, 787, 818, 849, 881, 911, 941];
-const PAX_COLS = { nat: [2, 296], id: [302, 196], name: [502, 348] };
+const TRIP_COLS = [[2, 196], [202, 146], [502, 381]]; // date, time, destination
 
-function mask(xPx: number, topPx: number, wPx: number, hPx: number): string {
-  return `<div style="position:absolute;left:${pt(xPx)}pt;bottom:${PAGE_H_PT - pt(topPx + hPx)}pt;width:${pt(wPx)}pt;height:${pt(hPx)}pt;background:#fff;z-index:8"></div>`;
-}
+// Passenger table — text baselines taken from the template's own row-number
+// cells (pt from page bottom), and column boxes in pt.
+const PAX_BASELINES = [
+  563.52, 537.36, 511.2, 481.76, 455.6, 429.44,
+  403.28, 377.12, 348.96, 321.6, 292.64, 265.28
+];
+const PAX_COLS_PT = {
+  nat: [1.8, 264.8],
+  id: [268.4, 174.2],
+  name: [446.2, 309.3]
+};
 
 function text(
   xPx: number,
@@ -37,14 +41,9 @@ function text(
   return `<div style="position:absolute;left:${pt(xPx)}pt;bottom:${PAGE_H_PT - pt(topPx + hPx)}pt;width:${pt(wPx)}pt;height:${pt(hPx)}pt;z-index:9;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
 }
 
-function cell(
-  col: number[],
-  topPx: number,
-  hPx: number,
-  value: string,
-  sizePt: number
-): string {
-  return mask(col[0], topPx, col[1], hPx) + text(col[0], topPx, col[1], hPx, value, sizePt);
+function rowText(col: number[], baselinePt: number, value: string, sizePt: number): string {
+  if (!value) return "";
+  return `<div style="position:absolute;left:${col[0]}pt;bottom:${baselinePt - 2}pt;width:${col[1]}pt;z-index:9;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
 }
 
 function fmtDate(d: string): string {
@@ -62,26 +61,24 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
   const to = esc(t.route_to || "");
 
   let cells = "";
-  // Driver name
-  cells += mask(DRIVER_CELL[0], 206, DRIVER_CELL[1], 30);
   cells += text(DRIVER_CELL[0], 206, DRIVER_CELL[1], 30, esc(d1.name || ""), 15);
-  // Vehicle row: plate, model, iqama, mobile (mobile left blank)
-  cells += cell(VEH_COLS[0], VEH_ROW_TOP, 29, esc(t.vehicle_plate || ""), 13);
-  cells += cell(VEH_COLS[1], VEH_ROW_TOP, 29, esc(t.car_model || ""), 13);
-  cells += cell(VEH_COLS[2], VEH_ROW_TOP, 29, esc(d1.iqama_no || ""), 13);
-  cells += mask(VEH_COLS[3][0], VEH_ROW_TOP, VEH_COLS[3][1], 29);
-  // Date / time / trip no / destination
-  cells += cell(TRIP_COLS[0], TRIP_ROW_TOP, 25, fmtDate(t.travel_date), 11);
-  cells += cell(TRIP_COLS[1], TRIP_ROW_TOP, 25, esc(t.trip_time || ""), 11);
-  cells += mask(TRIP_COLS[2][0], TRIP_ROW_TOP, TRIP_COLS[2][1], 25);
-  cells += cell(TRIP_COLS[3], TRIP_ROW_TOP, 25, from && to ? `${from} TO ${to}` : "", 12);
-  // Passenger rows
-  for (let i = 0; i < PAX_ROW_TOPS.length; i++) {
-    const top = PAX_ROW_TOPS[i];
-    const p = passengers[i] || {};
-    cells += cell(PAX_COLS.nat, top, 26, esc(p.nationality || ""), 11);
-    cells += cell(PAX_COLS.id, top, 26, esc(p.id_number || ""), 11);
-    cells += cell(PAX_COLS.name, top, 26, esc(p.name || ""), 11);
+  cells += text(VEH_COLS[0][0], VEH_ROW_TOP, VEH_COLS[0][1], 29, esc(t.vehicle_plate || ""), 13);
+  cells += text(VEH_COLS[1][0], VEH_ROW_TOP, VEH_COLS[1][1], 29, esc(t.car_model || ""), 13);
+  cells += text(VEH_COLS[2][0], VEH_ROW_TOP, VEH_COLS[2][1], 29, esc(d1.iqama_no || ""), 13);
+  cells += text(TRIP_COLS[0][0], TRIP_ROW_TOP, TRIP_COLS[0][1], 25, fmtDate(t.travel_date), 11);
+  cells += text(TRIP_COLS[1][0], TRIP_ROW_TOP, TRIP_COLS[1][1], 25, esc(t.trip_time || ""), 11);
+  cells += text(
+    TRIP_COLS[2][0], TRIP_ROW_TOP, TRIP_COLS[2][1], 25,
+    from && to ? `${from} TO ${to}` : "", 12
+  );
+
+  for (let i = 0; i < PAX_BASELINES.length; i++) {
+    const p = passengers[i];
+    if (!p) continue;
+    const b = PAX_BASELINES[i];
+    cells += rowText(PAX_COLS_PT.nat, b, esc(p.nationality || ""), 11);
+    cells += rowText(PAX_COLS_PT.id, b, esc(p.id_number || ""), 11);
+    cells += rowText(PAX_COLS_PT.name, b, esc(p.name || ""), 11);
   }
 
   let html = templateHtml;
@@ -97,9 +94,6 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
 #sidebar{display:none!important}
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
-/* Sample data baked into page 2's text layer (driver/vehicle values, trip
-   values and the 12 passenger rows) — removed so only our data shows. */
-#i41,#i35,#i33,#i25,#i24,#i23,#i22,#i21,#i20,#i19,#i18,#i17,#i16,#i15{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
 @media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}}
 </style>`;
@@ -108,6 +102,6 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
     /<title>[^<]*<\/title>/,
     `<title>${esc(t.trip_name || "Mehdullah Manifest")}</title>`
   );
-  html = html.replace("<body>", "<body><!--b44-mehdullah-v2-->");
+  html = html.replace("<body>", "<body><!--b44-mehdullah-v3-->");
   return html;
 }
