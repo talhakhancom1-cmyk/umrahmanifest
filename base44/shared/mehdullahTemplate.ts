@@ -55,9 +55,9 @@ function rowText(col: number[], baselinePt: number, value: string, sizePt: numbe
 // Values sit to the left of each label (RTL page), right-aligned.
 const P1_FROM_BASELINE = 429.44;
 const P1_TO_BASELINE = 387.4;
-const P1_DATE_BASELINE = 874.56;
+const P1_DATE_BASELINE = 813.6;
 const P1_ROUTE_BOX = [280, 300]; // [left pt, width pt]
-const P1_DATE_BOX = [480, 250];
+const P1_DATE_BOX = [430, 265];
 
 function p1Line(box: number[], baselinePt: number, value: string): string {
   if (!value) return "";
@@ -137,6 +137,6 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
     /<title>[^<]*<\/title>/,
     `<title>${esc(t.trip_name || "Mehdullah Manifest")}</title>`
   );
-  html = html.replace("<body>", "<body><!--b44-mehdullah-v6-->");
+  html = html.replace("<body>", "<body><!--b44-mehdullah-v7-->");
   return html;
 }
