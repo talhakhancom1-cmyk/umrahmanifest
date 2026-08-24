@@ -28,21 +28,26 @@ Double-check digits 0/8, 1/7, 5/6 and letters O/0, I/1, S/5 against both the pri
 Return ONLY the JSON object, with exactly the fields defined in the schema — no additional data.`;
 
 export async function uploadImageBuffer(base44, buffer, filename) {
-  // Retry up to 3 times: some uploads intermittently produce a 401 URL
-  // that the LLM cannot access, so we verify accessibility before returning.
-  let lastUrl = "";
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const file = new File([buffer], filename, { type: "image/jpeg" });
+  // Try public upload first (accessible URLs work for both OCR and long-term storage).
+  // UploadFile intermittently produces 401 URLs the LLM cannot read, so we verify
+  // accessibility and fall back to a signed URL from private storage if needed.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const fn = attempt === 0 ? filename : `r${attempt}_${Date.now()}_${filename}`;
+    const file = new File([buffer], fn, { type: "image/jpeg" });
     const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-    lastUrl = uploadRes.file_url;
     try {
-      const check = await fetch(lastUrl);
-      if (check.ok) return lastUrl;
+      const check = await fetch(uploadRes.file_url);
+      if (check.ok) return uploadRes.file_url;
     } catch {}
-    // Retry with a unique filename to force a fresh upload
-    filename = `r${attempt + 1}_${Date.now()}_${filename}`;
   }
-  return lastUrl;
+  // Fallback: private upload + signed URL (always accessible, 7-day expiry)
+  const file = new File([buffer], filename, { type: "image/jpeg" });
+  const privRes = await base44.asServiceRole.integrations.Core.UploadPrivateFile({ file });
+  const signedRes = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
+    file_uri: privRes.file_uri,
+    expires_in: 604800
+  });
+  return signedRes.signed_url;
 }
 
 export async function processPassengerPhoto(base44, fileUrl) {
