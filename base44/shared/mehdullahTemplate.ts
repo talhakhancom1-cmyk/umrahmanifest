@@ -51,6 +51,17 @@ function rowText(col: number[], baselinePt: number, value: string, sizePt: numbe
   return `<div style="position:absolute;left:${pctX(col[0])};bottom:${pctY(baselinePt - 2)};width:${pctX(col[1])};z-index:9;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
 }
 
+// Page 1 (Arabic contract) — route lines "النقل من :-" / "التوصيل الى :-".
+// Values sit to the left of each label (RTL page), right-aligned.
+const P1_FROM_BASELINE = 481.76;
+const P1_TO_BASELINE = 429.44;
+const P1_ROUTE_BOX = [280, 300]; // [left pt, width pt]
+
+function p1Route(baselinePt: number, value: string): string {
+  if (!value) return "";
+  return `<div style="position:absolute;left:${pctX(P1_ROUTE_BOX[0])};bottom:${pctY(baselinePt - 2)};width:${pctX(P1_ROUTE_BOX[1])};z-index:9;text-align:right;font-family:Arial,Helvetica,sans-serif;font-size:13pt;line-height:1;color:#000;white-space:nowrap"><span dir="ltr">${value}</span></div>`;
+}
+
 function fmtDate(d: string): string {
   if (!d) return "";
   const dt = new Date(d + "T00:00:00");
@@ -87,6 +98,20 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
   }
 
   let html = templateHtml;
+
+  // ---- Page 1: drop the "Enter text" placeholder, inject the route ----
+  html = html.replace(
+    /<div class="t m0 [^"]*"[^>]*>Enter text<\/div>/,
+    ""
+  );
+  const p1Cells = p1Route(P1_FROM_BASELINE, from) + p1Route(P1_TO_BASELINE, to);
+  const p1Idx = html.indexOf('<div id="pf1"');
+  if (p1Idx >= 0 && p1Cells) {
+    const before = html.slice(0, p1Idx);
+    const after = html.slice(p1Idx).replace(/(<img\b[^>]*>)/, "$1" + p1Cells);
+    html = before + after;
+  }
+
   const p2Idx = html.indexOf('<div id="pf2"');
   if (p2Idx >= 0) {
     const before = html.slice(0, p2Idx);
@@ -107,6 +132,6 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
     /<title>[^<]*<\/title>/,
     `<title>${esc(t.trip_name || "Mehdullah Manifest")}</title>`
   );
-  html = html.replace("<body>", "<body><!--b44-mehdullah-v4-->");
+  html = html.replace("<body>", "<body><!--b44-mehdullah-v5-->");
   return html;
 }
