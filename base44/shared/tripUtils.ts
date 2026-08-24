@@ -28,9 +28,21 @@ Double-check digits 0/8, 1/7, 5/6 and letters O/0, I/1, S/5 against both the pri
 Return ONLY the JSON object, with exactly the fields defined in the schema — no additional data.`;
 
 export async function uploadImageBuffer(base44, buffer, filename) {
-  const file = new File([buffer], filename, { type: "image/jpeg" });
-  const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({ file });
-  return uploadRes.file_url;
+  // Retry up to 3 times: some uploads intermittently produce a 401 URL
+  // that the LLM cannot access, so we verify accessibility before returning.
+  let lastUrl = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const file = new File([buffer], filename, { type: "image/jpeg" });
+    const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    lastUrl = uploadRes.file_url;
+    try {
+      const check = await fetch(lastUrl);
+      if (check.ok) return lastUrl;
+    } catch {}
+    // Retry with a unique filename to force a fresh upload
+    filename = `r${attempt + 1}_${Date.now()}_${filename}`;
+  }
+  return lastUrl;
 }
 
 export async function processPassengerPhoto(base44, fileUrl) {
