@@ -8,7 +8,12 @@ export const MEHDULLAH_TEMPLATE_URL =
 // Page 2 geometry. Rendered page is 892.98 x 1262.88 px = 793.76 x 1122.56 pt.
 const SCALE = 1.125;
 const PAGE_H_PT = 1122.560093;
+const PAGE_W_PT = 793.76;
 const pt = (px: number) => px / SCALE;
+// pdf2htmlEX pages are sized in px on screen and pt in print, so all of our
+// overlay positions are expressed as percentages of the page box.
+const pctX = (x: number) => ((x / PAGE_W_PT) * 100).toFixed(4) + "%";
+const pctY = (y: number) => ((y / PAGE_H_PT) * 100).toFixed(4) + "%";
 
 // Header blocks, measured in rendered px: [x, width]
 const DRIVER_CELL = [2, 704];
@@ -38,12 +43,12 @@ function text(
   sizePt: number
 ): string {
   if (!value) return "";
-  return `<div style="position:absolute;left:${pt(xPx)}pt;bottom:${PAGE_H_PT - pt(topPx + hPx)}pt;width:${pt(wPx)}pt;height:${pt(hPx)}pt;z-index:9;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
+  return `<div style="position:absolute;left:${pctX(pt(xPx))};bottom:${pctY(PAGE_H_PT - pt(topPx + hPx))};width:${pctX(pt(wPx))};height:${pctY(pt(hPx))};z-index:9;display:flex;align-items:center;justify-content:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
 }
 
 function rowText(col: number[], baselinePt: number, value: string, sizePt: number): string {
   if (!value) return "";
-  return `<div style="position:absolute;left:${col[0]}pt;bottom:${baselinePt - 2}pt;width:${col[1]}pt;z-index:9;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
+  return `<div style="position:absolute;left:${pctX(col[0])};bottom:${pctY(baselinePt - 2)};width:${pctX(col[1])};z-index:9;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:${sizePt}pt;line-height:1;color:#000;white-space:nowrap;overflow:hidden"><span dir="ltr">${value}</span></div>`;
 }
 
 function fmtDate(d: string): string {
@@ -102,6 +107,6 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
     /<title>[^<]*<\/title>/,
     `<title>${esc(t.trip_name || "Mehdullah Manifest")}</title>`
   );
-  html = html.replace("<body>", "<body><!--b44-mehdullah-v3-->");
+  html = html.replace("<body>", "<body><!--b44-mehdullah-v4-->");
   return html;
 }
