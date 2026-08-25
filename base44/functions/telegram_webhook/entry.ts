@@ -113,7 +113,11 @@ Deno.serve(async (req) => {
       const photoDownloader = async () => {
         const filePath = await getTelegramFilePath(token, fileId);
         const buffer = await downloadTelegramFile(token, filePath);
-        return { buffer, filename: `tg_${fileId}.jpg` };
+        return {
+          buffer,
+          filename: `tg_${fileId}.jpg`,
+          directUrl: `https://api.telegram.org/file/bot${token}/${filePath}`
+        };
       };
       await handlePhotoUpdate(base44, "TelegramSession", session, photoDownloader, sendMessage);
     }
