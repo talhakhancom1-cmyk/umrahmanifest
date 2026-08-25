@@ -134,9 +134,13 @@ async function startCollecting(base44, sessionEntityName, session, sendMessage) 
 }
 
 async function processPhoto(base44, sessionEntityName, session, photoDownloader, sendMessage) {
-  await sendMessage("⏳ Processing photo...");
   try {
-    const { buffer, filename } = await photoDownloader();
+    // Download the photo while the "processing" note is being sent — no need
+    // to wait for one before starting the other.
+    const [, { buffer, filename }] = await Promise.all([
+      sendMessage("⏳ Processing photo..."),
+      photoDownloader()
+    ]);
     const fileUrl = await uploadImageBuffer(base44, buffer, filename);
     let passenger = await processPassengerPhoto(base44, fileUrl);
 
@@ -167,13 +171,14 @@ async function processPhoto(base44, sessionEntityName, session, photoDownloader,
 
     // Atomic append ($push) — a read-modify-write here loses passengers when
     // several photos of a forwarded batch are processed at the same time.
-    await base44.asServiceRole.entities[sessionEntityName].updateMany(
-      { id: session.id },
-      { $push: { passengers: passenger, photo_urls: fileUrl } }
-    );
-
     const count = existing.length + 1;
-    await sendMessage(`✅ Passenger ${count} added:\nName: ${passenger.name}\nID: ${passenger.id_number}\nNationality: ${passenger.nationality}\n\nSend the next photo or reply "done".`);
+    await Promise.all([
+      base44.asServiceRole.entities[sessionEntityName].updateMany(
+        { id: session.id },
+        { $push: { passengers: passenger, photo_urls: fileUrl } }
+      ),
+      sendMessage(`✅ Passenger ${count} added:\nName: ${passenger.name}\nID: ${passenger.id_number}\nNationality: ${passenger.nationality}\n\nSend the next photo or reply "done".`)
+    ]);
   } catch (e) {
     await sendMessage(`⚠️ Could not process this photo: ${e.message}\n\nPlease try sending it again.`);
   }

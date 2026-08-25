@@ -31,12 +31,11 @@ export async function uploadImageBuffer(base44, buffer, filename) {
   // Try public upload first (accessible URLs work for both OCR and long-term storage).
   // UploadFile intermittently produces 401 URLs the LLM cannot read, so we verify
   // accessibility and fall back to a signed URL from private storage if needed.
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const fn = attempt === 0 ? filename : `r${attempt}_${Date.now()}_${filename}`;
-    const file = new File([buffer], fn, { type: "image/jpeg" });
+  {
+    const file = new File([buffer], filename, { type: "image/jpeg" });
     const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({ file });
     try {
-      const check = await fetch(uploadRes.file_url);
+      const check = await fetch(uploadRes.file_url, { method: "HEAD" });
       if (check.ok) return uploadRes.file_url;
     } catch {}
   }
