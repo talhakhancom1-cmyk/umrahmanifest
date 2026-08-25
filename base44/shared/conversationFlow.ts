@@ -135,25 +135,14 @@ async function startCollecting(base44, sessionEntityName, session, sendMessage) 
 
 async function processPhoto(base44, sessionEntityName, session, photoDownloader, sendMessage) {
   try {
-    const { buffer, filename, directUrl } = await photoDownloader();
-
-    // Storage upload and the ID reading no longer wait for each other: when the
-    // source gives us a directly readable URL we scan that immediately while the
-    // permanent copy uploads in the background.
-    const uploadPromise = uploadImageBuffer(base44, buffer, filename);
-    let passenger;
-    let fileUrl;
-    if (directUrl) {
-      const [pax, url] = await Promise.all([
-        processPassengerPhoto(base44, directUrl),
-        uploadPromise
-      ]);
-      passenger = pax;
-      fileUrl = url;
-    } else {
-      fileUrl = await uploadPromise;
-      passenger = await processPassengerPhoto(base44, fileUrl);
-    }
+    // Download the photo while the "processing" note is being sent — no need
+    // to wait for one before starting the other.
+    const [, { buffer, filename }] = await Promise.all([
+      sendMessage("⏳ Processing photo..."),
+      photoDownloader()
+    ]);
+    const fileUrl = await uploadImageBuffer(base44, buffer, filename);
+    let passenger = await processPassengerPhoto(base44, fileUrl);
 
     // Retry once if the reading came back blank
     if (!passenger.name && !passenger.id_number) {
