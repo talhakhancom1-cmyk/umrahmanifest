@@ -54,7 +54,7 @@ export async function processPassengerPhoto(base44, fileUrl) {
     prompt: OCR_PROMPT,
     file_urls: [fileUrl],
     response_json_schema: OCR_SCHEMA,
-    model: "gemini_3_flash"
+    model: "claude_sonnet_4_6"
   });
   const data = (ocrRes && ocrRes.response) ? ocrRes.response : (ocrRes || {});
   return {
