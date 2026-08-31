@@ -73,6 +73,26 @@ function buildPaxMask(): string {
   return `<div class="b44-mask" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:2">${rects}</div>`;
 }
 
+// The template's text layer only has 7 passenger rows, but the printed grid
+// continues below — draw extra passengers (8+) as overlay cells on the grid.
+function buildExtraPaxRows(passengers: any[]): string {
+  const pctW = (v: number) => (v / PAGE_W * 100).toFixed(4) + "%";
+  const pctH = (v: number) => (v / PAGE_H * 100).toFixed(4) + "%";
+  let cells = "";
+  for (let i = ROW_COUNT; i < Math.min(passengers.length, 12); i++) {
+    const p = passengers[i] || {};
+    const top = ROW_LINE0 + (i + 1) * ROW_PITCH + 4;
+    if (p.id_number) {
+      cells += `<div style="position:absolute;left:${pctW(MASK_COLS[0].left)};top:${pctH(top)};width:${pctW(MASK_COLS[0].width)};height:${pctH(71)};display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-weight:bold;font-size:34px;color:#000">${esc(p.id_number)}</div>`;
+    }
+    if (p.name) {
+      cells += `<div style="position:absolute;left:${pctW(MASK_COLS[1].left)};top:${pctH(top)};width:${pctW(MASK_COLS[1].width)};height:${pctH(71)};display:flex;align-items:center;font-family:Arial,sans-serif;font-weight:bold;font-size:28px;color:#000;white-space:nowrap;overflow:hidden">${esc(p.name)}</div>`;
+    }
+  }
+  if (!cells) return "";
+  return `<div class="b44-extra-pax" style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:3">${cells}</div>`;
+}
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -126,7 +146,7 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
     const before = html.slice(0, p2Idx);
     // insert right AFTER the page's background raster so the mask paints over
     // it, while all text divs (which follow) still paint above the mask
-    const after = html.slice(p2Idx).replace(/(<img\b[^>]*>)/, "$1" + buildPaxMask());
+    const after = html.slice(p2Idx).replace(/(<img\b[^>]*>)/, "$1" + buildPaxMask() + buildExtraPaxRows(passengers));
     html = before + after;
   }
 
@@ -148,6 +168,7 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 /* keep the white masks above the page raster, and all text above the masks */
+#pf2 .t{z-index:3!important}
 
 /* The source page is 1860px wide — scale it down so one page = one A4 sheet */
 .pf{zoom:${PAGE_ZOOM}}
@@ -158,7 +179,7 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
 
   // version marker so we can confirm the live deploy picked up this builder
-  html = html.replace("<body>", "<body><!--b44-taybah-v7-->");
+  html = html.replace("<body>", "<body><!--b44-taybah-v8-->");
 
   return html;
 }
