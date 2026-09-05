@@ -148,12 +148,21 @@ export default function QuickManifest() {
             <Label>Driver</Label>
             <Select value={driverId} onValueChange={setDriverId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select driver" />
+                <SelectValue placeholder="Select driver">
+                  {drivers.find((d) => d.id === driverId)?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {drivers.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
+                  <SelectItem key={d.id} value={d.id} textValue={d.name}>
+                    <div className="flex flex-col items-start gap-0.5">
+                      <span>{d.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {[d.car_model, d.vehicle_plate, d.name2 ? `with ${d.name2}` : ""]
+                          .filter(Boolean)
+                          .join(" • ")}
+                      </span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
