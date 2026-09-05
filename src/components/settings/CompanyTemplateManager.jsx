@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Pencil, Loader2, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import TemplateExportImport from "@/components/settings/TemplateExportImport";
 
 function AssetField({ label, value, onChange }) {
   const ref = useRef(null);
@@ -156,7 +157,8 @@ export default function CompanyTemplateManager() {
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <TemplateExportImport onImported={load} />
         <Button onClick={openNew} size="sm">
           <Plus className="w-4 h-4" /> Add Company
         </Button>
