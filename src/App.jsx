@@ -14,6 +14,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Home from '@/pages/Home';
 import QuickManifest from '@/pages/QuickManifest';
+import BuildPlan from '@/pages/BuildPlan';
 import TripWorkspace from '@/pages/TripWorkspace';
 import TripDocument from '@/pages/TripDocument';
 import Settings from '@/pages/Settings';

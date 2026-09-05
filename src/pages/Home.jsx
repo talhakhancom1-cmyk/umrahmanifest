@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Trash2, ArrowRight, Settings as SettingsIcon, Wand2 } from "lucide-react";
+import { Plus, FileText, Trash2, ArrowRight, Settings as SettingsIcon, Wand2, BookOpen } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const routeLabel = (t) => {
@@ -94,6 +94,9 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => navigate("/settings")}>
               <SettingsIcon className="w-4 h-4" /> Settings
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/build-plan")}>
+              <BookOpen className="w-4 h-4" /> Build Plan
             </Button>
             <Button variant="outline" onClick={() => navigate("/quick")}>
               <Wand2 className="w-4 h-4" /> Quick Manifest
