@@ -1,7 +1,8 @@
 // Builds the trip document from the Jiwah Al-Sahab (JSC Transport) contract template.
-// The template's baked driver name, iqama, plate, car and phone are preserved
-// as-is (kept visible in the text layer). Only date, time, destination and
-// passenger data are dynamic — replaced in-place + a clean passenger grid overlay.
+// Date, time, destination, passenger AND driver data are dynamic — the baked
+// sample driver (name, iqama, plate, car) is replaced in-place with the trip's
+// selected driver; passengers get a clean overlay grid. The baked phone number
+// is kept as-is (no phone field on the trip/driver records).
 import { esc, fmtDate, replaceTDivs } from "./mscTemplate.ts";
 
 export const JIWAH_TEMPLATE_URL =
@@ -26,6 +27,10 @@ const SAMPLE_FROM_P1 = "MAKKAH TO TAIF";              // page 1 "transport from"
 const SAMPLE_TO_P1 = "MAKKAH";                        // page 1 "to" destination field
 const SAMPLE_SECOND_PARTY = "ZUBER ISMAIL MAHAMMAD ALI DAJI / WITH 10 MEMBERS";
 const SAMPLE_NAT = "INDIA";
+const SAMPLE_DRIVER_NAME = "SHAFIQUE UR RAHMAN";
+const SAMPLE_DRIVER_IQAMA = "2377675596";
+const SAMPLE_PLATE = "3380 - XSA";
+const SAMPLE_CAR = "HUNDAI FAAN";
 const SAMPLE_NAMES = [
   "ZUBER ISMAIL MAHAMMAD ALI DAJI",
   "SUHEIL VALI MAHAMMED MUNSHI",
@@ -67,12 +72,15 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
   const passengers = t.passengers || [];
   const leader = esc((passengers[0] || {}).name || "");
   const secondParty = leader ? `${leader} / WITH ${Math.max(passengers.length - 1, 0)} MEMBERS` : "";
+  const d1 = ((t.drivers || [])[0]) || {};
+  const plate = esc(t.vehicle_plate || "");
+  const car = esc(t.car_model || "");
 
   let html = templateHtml;
 
-  // In-place replacements: date, time, route/destination, group leader; blank
-  // the sample passenger cells so the clean overlay grid can replace them.
-  // Driver name / iqama / plate / car / phone are intentionally NOT touched.
+  // In-place replacements: date, time, route/destination, group leader and the
+  // baked sample driver (name, iqama, plate, car); blank the sample passenger
+  // cells so the clean overlay grid can replace them. The baked phone stays.
   html = replaceTDivs(html, [
     (s) => s === SAMPLE_DATE ? date : null,
     (s) => s === SAMPLE_TIME ? time : null,
@@ -80,6 +88,10 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
     (s) => s === SAMPLE_FROM_P1 ? from : null,
     (s) => s === SAMPLE_TO_P1 ? to : null,
     (s) => s === SAMPLE_SECOND_PARTY ? secondParty : null,
+    (s) => s === SAMPLE_DRIVER_NAME ? esc(d1.name || "") : null,
+    (s) => s === SAMPLE_DRIVER_IQAMA ? esc(d1.iqama_no || "") : null,
+    (s) => s === SAMPLE_PLATE ? plate : null,
+    (s) => s === SAMPLE_CAR ? car : null,
     (s) => SAMPLE_NAMES.indexOf(s) >= 0 ? "" : null,
     (s) => SAMPLE_IDS.indexOf(s) >= 0 ? "" : null,
     (s) => s === SAMPLE_NAT ? "" : null
