@@ -13,6 +13,7 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Home from '@/pages/Home';
+import QuickManifest from '@/pages/QuickManifest';
 import TripWorkspace from '@/pages/TripWorkspace';
 import TripDocument from '@/pages/TripDocument';
 import Settings from '@/pages/Settings';
@@ -43,6 +44,7 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Home />} />
+      <Route path="/quick" element={<QuickManifest />} />
       <Route path="/trips/:id" element={<TripWorkspace />} />
       <Route path="/trips/:id/document" element={<TripDocument />} />
       <Route path="/settings" element={<Settings />} />
