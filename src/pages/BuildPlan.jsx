@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import plan from "@/docs/self-hosted-build-plan.txt?raw";
+import { BUILD_PLAN_MD as plan } from "@/docs/buildPlanContent";
 
 const components = {
   h1: (p) => (
