@@ -46,6 +46,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<Home />} />
       <Route path="/quick" element={<QuickManifest />} />
+      <Route path="/build-plan" element={<BuildPlan />} />
       <Route path="/trips/:id" element={<TripWorkspace />} />
       <Route path="/trips/:id/document" element={<TripDocument />} />
       <Route path="/settings" element={<Settings />} />
