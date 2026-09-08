@@ -15,6 +15,9 @@ import { ArrowLeft, FileText, Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
+import WardaExtraFields from "@/components/quick/WardaExtraFields";
+
+const isWarda = (company) => /warda/i.test(company?.name || "");
 
 export default function QuickManifest() {
   const navigate = useNavigate();
@@ -32,6 +35,14 @@ export default function QuickManifest() {
   const [passengers, setPassengers] = useState([]);
   const [photoUrls, setPhotoUrls] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [warda, setWarda] = useState({ driverPhone: "", tripNumber: "", notes: "" });
+
+  const selectedCompany = companies.find((c) => c.id === companyId);
+
+  useEffect(() => {
+    const d = drivers.find((x) => x.id === driverId);
+    if (d) setWarda((w) => ({ ...w, driverPhone: d.phone || "" }));
+  }, [driverId]);
 
   useEffect(() => {
     base44.entities.CompanyTemplate.filter({ is_active: true })
@@ -68,7 +79,14 @@ export default function QuickManifest() {
     }
     setCreating(true);
     try {
-      const driversArr = [{ name: driver.name, iqama_no: driver.iqama_no || "" }];
+      const wardaSel = isWarda(company);
+      const driversArr = [
+        {
+          name: driver.name,
+          iqama_no: driver.iqama_no || "",
+          phone: wardaSel ? warda.driverPhone : driver.phone || ""
+        }
+      ];
       if (driver.name2)
         driversArr.push({ name: driver.name2, iqama_no: driver.iqama_no2 || "" });
       const created = await base44.entities.Trip.create({
@@ -77,6 +95,8 @@ export default function QuickManifest() {
         route_to: routeTo,
         travel_date: travelDate,
         trip_time: tripTime,
+        trip_number: wardaSel ? warda.tripNumber : "",
+        notes: wardaSel ? warda.notes : "",
         second_party_name: "",
         drivers: driversArr,
         vehicle_plate: driver.vehicle_plate || "",
@@ -221,6 +241,10 @@ export default function QuickManifest() {
             <option value="Buraidah" />
           </datalist>
         </section>
+
+        {isWarda(selectedCompany) && (
+          <WardaExtraFields values={warda} onChange={setWarda} />
+        )}
 
         <section>
           <div className="flex items-center justify-between mb-3">

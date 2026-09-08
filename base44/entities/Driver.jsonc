@@ -8,6 +8,10 @@
     "iqama_no": {
       "type": "string"
     },
+    "phone": {
+      "type": "string",
+      "description": "Driver mobile number"
+    },
     "name2": {
       "type": "string",
       "description": "Second driver name (optional, same vehicle)"

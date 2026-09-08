@@ -18,6 +18,14 @@
     "trip_time": {
       "type": "string"
     },
+    "trip_number": {
+      "type": "string",
+      "description": "Company trip/reference number (Warda)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Remarks printed on the manifest (Warda)"
+    },
     "second_party_name": {
       "type": "string"
     },
@@ -30,6 +38,9 @@
             "type": "string"
           },
           "iqama_no": {
+            "type": "string"
+          },
+          "phone": {
             "type": "string"
           }
         }

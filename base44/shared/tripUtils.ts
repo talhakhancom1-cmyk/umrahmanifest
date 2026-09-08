@@ -79,7 +79,7 @@ export async function createTripFromTemplate(base44, session) {
   const driver = session.driver || null;
   const driversArr = [];
   if (driver) {
-    driversArr.push({ name: driver.name, iqama_no: driver.iqama_no || "" });
+    driversArr.push({ name: driver.name, iqama_no: driver.iqama_no || "", phone: driver.phone || "" });
     if (driver.name2) driversArr.push({ name: driver.name2, iqama_no: driver.iqama_no2 || "" });
   }
 

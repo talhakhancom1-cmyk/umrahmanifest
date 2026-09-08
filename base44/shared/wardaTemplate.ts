@@ -30,10 +30,15 @@ const VEH = {
   type: { left: 793, width: 94 },
   plate: { left: 678, width: 115 },
   driver: { left: 464, width: 214 },
-  iqama: { left: 247, width: 217 }
+  iqama: { left: 247, width: 217 },
+  phone: { left: 29, width: 218 }
 };
 // Date value cell (row with التاريخ label)
 const P1_DATE_CELL = { left: 678, width: 112, bottom: 828 };
+// Notes value cell (left of الملاحظات label, same row as date)
+const P1_NOTES_CELL = { left: 29, width: 430, bottom: 828 };
+// Trip number value cell (row with رقم الرحلة label)
+const P1_TRIPNO_CELL = { left: 678, width: 112, bottom: 799 };
 // Route row (النقل من / وصولا الى): baked sample values are covered then overlaid
 const ROUTE_ROW = { bottom: 1025, height: 30, textBottom: 1033 };
 const ROUTE_FROM_BOX = { left: 464, width: 316 };
@@ -121,6 +126,7 @@ export function buildFromWardaTemplate(templateHtml, trip) {
   const to = esc((t.route_to || "").replace(/_/g, " ").toUpperCase());
   const driverName = esc((drivers[0] || {}).name || "");
   const driverIqama = esc((drivers[0] || {}).iqama_no || "");
+  const driverPhone = esc((drivers[0] || {}).phone || "");
   const plate = esc(t.vehicle_plate || "");
   const carModel = esc(t.car_model || "");
 
@@ -152,8 +158,11 @@ export function buildFromWardaTemplate(templateHtml, trip) {
   ov1 += box(VEH.plate, VEH_BOTTOM, plate);
   ov1 += box(VEH.driver, VEH_BOTTOM, driverName);
   ov1 += box(VEH.iqama, VEH_BOTTOM, driverIqama);
-  // date cell
+  ov1 += box(VEH.phone, VEH_BOTTOM, driverPhone);
+  // date / notes / trip number cells
   ov1 += box(P1_DATE_CELL, P1_DATE_CELL.bottom, date);
+  ov1 += box(P1_NOTES_CELL, P1_NOTES_CELL.bottom, esc(t.notes || ""));
+  ov1 += box(P1_TRIPNO_CELL, P1_TRIPNO_CELL.bottom, esc(t.trip_number || ""));
   // passenger rows
   for (let i = 0; i < Math.min(passengers.length, MAX_ROWS); i++) {
     const p = passengers[i] || {};
