@@ -194,7 +194,12 @@ export function buildFromWardaTemplate(templateHtml, trip) {
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}.pf{zoom:0.62;margin:0 auto}}
+@media print{
+  @page{size:A4;margin:0}
+  html,body{width:100%!important;margin:0!important;padding:0!important}
+  #page-container{position:static!important;width:100%!important;height:auto!important;overflow:visible!important;background:#fff!important}
+  .pf{zoom:0.74;margin:0 auto!important;float:none!important}
+}
 </style>`;
   head = head.replace("</head>", extraCss + "\n</head>");
   head = head.replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
