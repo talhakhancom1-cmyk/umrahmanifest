@@ -16,6 +16,8 @@ const pct = (v, ref) => (v / ref * 100).toFixed(4) + "%";
 // ---- Page 1 ----
 // Second-party placeholder baked into the template
 const P1_SECOND_PARTY = "m0 x1b h5 y25 ff1 fs0 fc0 sc0 ls0 ws0";
+// Baked "جوال: 0562220591" mobile value on page 1
+const P1_MOBILE = "m0 x11 h5 y1c ff1 fs0 fc0 sc0 ls2 ws0";
 
 // Passenger table columns (RTL: # | name | id | nationality)
 const COL_NAME = { left: 464, width: 334, align: "center" };
@@ -141,6 +143,7 @@ export function buildFromWardaTemplate(templateHtml, trip) {
     ? `${driverName} WITH ${passengers.length} PASSENGERS`
     : esc(t.second_party_name || "");
   if (secondParty) p1 = replaceDivInner(p1, P1_SECOND_PARTY, fitSpan(secondParty, 26));
+  if (driverPhone) p1 = replaceDivInner(p1, P1_MOBILE, fitSpan(driverPhone, 10));
 
   // ---- Page 1 overlays ----
   let ov1 = "";
