@@ -39,6 +39,17 @@ export default function QuickManifest() {
 
   const selectedCompany = companies.find((c) => c.id === companyId);
 
+  // Always (re)stamp Saudi date & time when the page opens or regains focus
+  useEffect(() => {
+    const stamp = () => {
+      setTravelDate(saudiDate());
+      setTripTime(saudiTime());
+    };
+    stamp();
+    window.addEventListener("focus", stamp);
+    return () => window.removeEventListener("focus", stamp);
+  }, []);
+
   useEffect(() => {
     const d = drivers.find((x) => x.id === driverId);
     if (d) setWarda((w) => ({ ...w, driverPhone: d.phone || "" }));
