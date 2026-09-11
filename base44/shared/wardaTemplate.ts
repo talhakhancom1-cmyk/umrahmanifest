@@ -4,6 +4,7 @@
 // Dynamic fields overlaid at measured page-absolute positions; baked layout,
 // borders, logo and QR are preserved.
 import { esc } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const WARDA_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/248622c66__merged.html";
@@ -124,8 +125,9 @@ export function buildFromWardaTemplate(templateHtml, trip) {
   const drivers = t.drivers || [];
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc((t.route_from || "").replace(/_/g, " ").toUpperCase());
-  const to = esc((t.route_to || "").replace(/_/g, " ").toUpperCase());
+  // Warda is an Arabic contract — route places are printed in Arabic
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const driverName = esc((drivers[0] || {}).name || "");
   const driverIqama = esc((drivers[0] || {}).iqama_no || "");
   const driverPhone = esc((drivers[0] || {}).phone || "");
