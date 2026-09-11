@@ -17,6 +17,7 @@ import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
 import WardaExtraFields from "@/components/quick/WardaExtraFields";
 import PlaceSelect from "@/components/quick/PlaceSelect";
+import { saudiDate, saudiTime } from "@/lib/saudiTime";
 
 const isWarda = (company) => /warda/i.test(company?.name || "");
 
@@ -29,10 +30,8 @@ export default function QuickManifest() {
   const [driverId, setDriverId] = useState("");
   const [routeFrom, setRouteFrom] = useState("Madina");
   const [routeTo, setRouteTo] = useState("Makkah");
-  const [travelDate, setTravelDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
-  const [tripTime, setTripTime] = useState("");
+  const [travelDate, setTravelDate] = useState(saudiDate());
+  const [tripTime, setTripTime] = useState(saudiTime());
   const [passengers, setPassengers] = useState([]);
   const [photoUrls, setPhotoUrls] = useState([]);
   const [creating, setCreating] = useState(false);
