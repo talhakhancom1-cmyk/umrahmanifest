@@ -16,7 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
 import WardaExtraFields from "@/components/quick/WardaExtraFields";
-import WardaRouteSelect from "@/components/quick/WardaRouteSelect";
+import PlaceSelect from "@/components/quick/PlaceSelect";
 
 const isWarda = (company) => /warda/i.test(company?.name || "");
 
@@ -194,27 +194,11 @@ export default function QuickManifest() {
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label>Route From</Label>
-            {isWarda(selectedCompany) ? (
-              <WardaRouteSelect value={routeFrom} onChange={setRouteFrom} />
-            ) : (
-              <Input
-                list="quick-route-options"
-                value={routeFrom}
-                onChange={(e) => setRouteFrom(e.target.value)}
-              />
-            )}
+            <PlaceSelect value={routeFrom} onChange={setRouteFrom} />
           </div>
           <div className="space-y-1.5">
             <Label>Route To</Label>
-            {isWarda(selectedCompany) ? (
-              <WardaRouteSelect value={routeTo} onChange={setRouteTo} />
-            ) : (
-              <Input
-                list="quick-route-options"
-                value={routeTo}
-                onChange={(e) => setRouteTo(e.target.value)}
-              />
-            )}
+            <PlaceSelect value={routeTo} onChange={setRouteTo} />
           </div>
           <div className="space-y-1.5">
             <Label>Travel Date</Label>
@@ -232,23 +216,6 @@ export default function QuickManifest() {
               onChange={(e) => setTripTime(e.target.value)}
             />
           </div>
-          <datalist id="quick-route-options">
-            <option value="Madina" />
-            <option value="Makkah" />
-            <option value="Riyadh" />
-            <option value="Dammam" />
-            <option value="Jeddah" />
-            <option value="Zalim" />
-            <option value="Tayab" />
-            <option value="Al_Qasim" />
-            <option value="Ramazia" />
-            <option value="Al_Hanakiyyah" />
-            <option value="Al_Humiyat" />
-            <option value="Riswan" />
-            <option value="Ajdar_Milan_Airport" />
-            <option value="Ruwaydah" />
-            <option value="Buraidah" />
-          </datalist>
         </section>
 
         {isWarda(selectedCompany) && (
