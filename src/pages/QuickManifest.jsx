@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
 import WardaExtraFields from "@/components/quick/WardaExtraFields";
+import WardaRouteSelect from "@/components/quick/WardaRouteSelect";
 
 const isWarda = (company) => /warda/i.test(company?.name || "");
 
@@ -193,19 +194,27 @@ export default function QuickManifest() {
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label>Route From</Label>
-            <Input
-              list="quick-route-options"
-              value={routeFrom}
-              onChange={(e) => setRouteFrom(e.target.value)}
-            />
+            {isWarda(selectedCompany) ? (
+              <WardaRouteSelect value={routeFrom} onChange={setRouteFrom} />
+            ) : (
+              <Input
+                list="quick-route-options"
+                value={routeFrom}
+                onChange={(e) => setRouteFrom(e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Route To</Label>
-            <Input
-              list="quick-route-options"
-              value={routeTo}
-              onChange={(e) => setRouteTo(e.target.value)}
-            />
+            {isWarda(selectedCompany) ? (
+              <WardaRouteSelect value={routeTo} onChange={setRouteTo} />
+            ) : (
+              <Input
+                list="quick-route-options"
+                value={routeTo}
+                onChange={(e) => setRouteTo(e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Travel Date</Label>
