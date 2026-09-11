@@ -4,6 +4,7 @@
 // Dynamic fields are swapped in-place by their pdf2htmlEX class strings;
 // the baked Arabic layout, borders, stamps and watermark are preserved.
 import { esc, fmtDate } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const SHARIF_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/2e0ae0c8e_TLBAALI7934SADAMHUSSAIN.html";
@@ -135,8 +136,8 @@ export function buildFromSharifTemplate(templateHtml, trip) {
   const drivers = t.drivers || [];
   const date = fmtDate(t.travel_date);
   const time = fmtTime(t.trip_time);
-  const from = esc((t.route_from || "").toUpperCase());
-  const to = esc((t.route_to || "").toUpperCase());
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const driverName = esc((drivers[0] || {}).name || "");
   const driverIqama = esc((drivers[0] || {}).iqama_no || "");
   const plate = esc(t.vehicle_plate || "");

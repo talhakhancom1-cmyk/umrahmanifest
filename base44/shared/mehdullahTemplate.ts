@@ -1,4 +1,5 @@
 import { esc } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 // Blank Al-Fakhama (MEHDULLAH) template — no sample data baked in, so we only
 // draw our own values on top of the printed grid.
@@ -75,8 +76,8 @@ export function buildFromMehdullahTemplate(templateHtml: string, trip: any): str
   const t = trip || {};
   const passengers = t.passengers || [];
   const d1 = (t.drivers || [])[0] || {};
-  const from = esc(t.route_from || "");
-  const to = esc(t.route_to || "");
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
 
   let cells = "";
   cells += text(DRIVER_CELL[0], 206, DRIVER_CELL[1], 30, esc(d1.name || ""), 15);

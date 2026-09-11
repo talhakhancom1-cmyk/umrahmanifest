@@ -3,6 +3,8 @@
 // dynamic values are swapped directly inside the template's text layer, so
 // positioning and typography match the source PDF exactly.
 
+import { placeNameAr } from "./placeNamesAr.ts";
+
 export const MSC_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/6cdbbe766_ZAHIRGUL2759SXA1.html";
 
@@ -106,8 +108,8 @@ export function buildFromMscTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc((t.route_from || "").toUpperCase());
-  const to = esc((t.route_to || "").toUpperCase());
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const dest = `${from} TO ${to}`;
   const drivers = t.drivers || [];
   const passengers = t.passengers || [];

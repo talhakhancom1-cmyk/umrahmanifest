@@ -4,6 +4,7 @@
 // values are overlaid as absolutely-positioned "b44-cell" divs at measured
 // table positions — the PDF builder draws these cells too.
 import { esc, fmtDate } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const AWTAR_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/311bd0e8d______compressedpdf2.html";
@@ -44,8 +45,8 @@ export function buildFromAwtarTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc((t.route_from || "").toUpperCase());
-  const to = esc((t.route_to || "").toUpperCase());
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const d1 = (t.drivers || [])[0] || {};
   const passengers = t.passengers || [];
 

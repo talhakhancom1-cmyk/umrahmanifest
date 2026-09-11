@@ -4,6 +4,7 @@
 //   pf1 = English manifest (driver, vehicle, passengers, date, times)
 //   pf2 = Arabic contract (second party, route, date)
 import { esc } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const TALAB_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/272c894dd_trip_148487_company_apdf.html";
@@ -85,8 +86,8 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
   const dateEn = fmtDateEn(t.travel_date);
   const dateAr = fmtDateAr(t.travel_date);
   const secondParty = esc(t.second_party_name || "");
-  const routeFrom = esc(t.route_from || "");
-  const routeTo = esc(t.route_to || "");
+  const routeFrom = esc(placeNameAr(t.route_from));
+  const routeTo = esc(placeNameAr(t.route_to));
   let html = templateHtml;
 
   // ---- Arabic contract page ----

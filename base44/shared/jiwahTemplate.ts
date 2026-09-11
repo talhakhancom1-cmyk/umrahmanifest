@@ -4,6 +4,7 @@
 // selected driver; passengers get a clean overlay grid. The baked phone number
 // is kept as-is (no phone field on the trip/driver records).
 import { esc, fmtDate, replaceTDivs } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const JIWAH_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/95a6f8eb0_JIWARALSAHAB3380SHAFIQUEURREHMAN.html";
@@ -66,8 +67,8 @@ export function buildFromJiwahTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc((t.route_from || "").toUpperCase());
-  const to = esc((t.route_to || "").toUpperCase());
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const route = from && to ? `${from} TO ${to}` : "";
   const passengers = t.passengers || [];
   const leader = esc((passengers[0] || {}).name || "");

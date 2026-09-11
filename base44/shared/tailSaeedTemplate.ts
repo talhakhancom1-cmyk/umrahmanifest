@@ -6,6 +6,7 @@
 // phone 0509567527) are BAKED IN and never overridden — only date, route, time,
 // second party, and passenger data are dynamic.
 import { esc, fmtDate, replaceTDivs, centered } from "./mscTemplate.ts";
+import { placeNameAr } from "./placeNamesAr.ts";
 
 export const TAIL_SAEED_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/228644818_TAILSAEED7770MTAWAFKHAN.html";
@@ -46,8 +47,8 @@ export function buildFromTailSaeedTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc((t.route_from || "").toUpperCase());
-  const to = esc((t.route_to || "").toUpperCase());
+  const from = esc(placeNameAr(t.route_from));
+  const to = esc(placeNameAr(t.route_to));
   const route = from && to ? `${from} TO ${to}` : "";
   const passengers = t.passengers || [];
   const leader = esc((passengers[0] || {}).name || "");
