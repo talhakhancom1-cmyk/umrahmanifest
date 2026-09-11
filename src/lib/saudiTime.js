@@ -1,24 +1,21 @@
-// Current date/time in Saudi Arabia (Asia/Riyadh) — used as the default
-// date & time when creating a manifest. Both stay editable by the operator.
-const TZ = "Asia/Riyadh";
+// Saudi Arabia clock (UTC+3, no DST) computed from UTC arithmetic so it never
+// depends on the computer's local timezone or Intl timezone data.
+const OFFSET_MS = 3 * 60 * 60 * 1000;
+
+function saudiNow() {
+  return new Date(Date.now() + OFFSET_MS);
+}
+
+const p2 = (n) => String(n).padStart(2, "0");
 
 export function saudiDate() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).format(new Date());
-  return parts; // YYYY-MM-DD
+  const d = saudiNow();
+  return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())}`;
 }
 
 export function saudiTime() {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  })
-    .format(new Date())
-    .replace(/\u202f/g, " ");
+  const d = saudiNow();
+  const h24 = d.getUTCHours();
+  const h = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h}:${p2(d.getUTCMinutes())} ${h24 < 12 ? "AM" : "PM"}`;
 }

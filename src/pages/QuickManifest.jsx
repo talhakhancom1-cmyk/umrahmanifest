@@ -39,15 +39,21 @@ export default function QuickManifest() {
 
   const selectedCompany = companies.find((c) => c.id === companyId);
 
-  // Always (re)stamp Saudi date & time when the page opens or regains focus
+  // Keep Saudi (UTC+3) date & time live until the operator edits them
+  const dtEdited = React.useRef(false);
   useEffect(() => {
     const stamp = () => {
+      if (dtEdited.current) return;
       setTravelDate(saudiDate());
       setTripTime(saudiTime());
     };
     stamp();
     window.addEventListener("focus", stamp);
-    return () => window.removeEventListener("focus", stamp);
+    const id = setInterval(stamp, 30000);
+    return () => {
+      window.removeEventListener("focus", stamp);
+      clearInterval(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -215,7 +221,10 @@ export default function QuickManifest() {
             <Input
               type="date"
               value={travelDate}
-              onChange={(e) => setTravelDate(e.target.value)}
+              onChange={(e) => {
+                dtEdited.current = true;
+                setTravelDate(e.target.value);
+              }}
             />
           </div>
           <div className="space-y-1.5">
@@ -223,7 +232,10 @@ export default function QuickManifest() {
             <Input
               placeholder="e.g. 7:05 PM"
               value={tripTime}
-              onChange={(e) => setTripTime(e.target.value)}
+              onChange={(e) => {
+                dtEdited.current = true;
+                setTripTime(e.target.value);
+              }}
             />
           </div>
         </section>
