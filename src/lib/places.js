@@ -1,11 +1,14 @@
-// Places from the route history with their Arabic names.
+// Places used across the trip history, with their Arabic names.
 // The stored value stays English; the Warda manifest prints the Arabic name.
 export const PLACES = [
   { en: "Madina", ar: "المدينة المنورة" },
+  { en: "Madina_Airport", ar: "مطار المدينة المنورة" },
   { en: "Makkah", ar: "مكة المكرمة" },
-  { en: "Riyadh", ar: "الرياض" },
   { en: "Jeddah", ar: "جدة" },
+  { en: "Jeddah_Airport", ar: "مطار جدة" },
+  { en: "Riyadh", ar: "الرياض" },
   { en: "Dammam", ar: "الدمام" },
+  { en: "Taif", ar: "الطائف" },
   { en: "Tayab", ar: "الطائف" },
   { en: "Al_Qasim", ar: "القصيم" },
   { en: "Buraidah", ar: "بريدة" },
@@ -14,6 +17,20 @@ export const PLACES = [
   { en: "Ramazia", ar: "الرمزية" },
   { en: "Al_Hanakiyyah", ar: "الحناكية" },
   { en: "Al_Humiyat", ar: "الحميات" },
+  { en: "Al_Muwayh", ar: "المويه" },
+  { en: "Al_Quwaiiyah", ar: "القويعية" },
+  { en: "Al_Qawz", ar: "القوز" },
+  { en: "Al_Yutmah", ar: "اليتمة" },
+  { en: "Bajadia", ar: "البجادية" },
+  { en: "Bishah", ar: "بيشة" },
+  { en: "Dawadmi", ar: "الدوادمي" },
+  { en: "Hail", ar: "حائل" },
+  { en: "Halban", ar: "حلبان" },
+  { en: "Hurma", ar: "حرمة" },
+  { en: "Jazan", ar: "جازان" },
+  { en: "Khamis_Mushait", ar: "خميس مشيط" },
+  { en: "Khasra", ar: "الخاصرة" },
+  { en: "Tabuk", ar: "تبوك" },
   { en: "Riswan", ar: "رضوان" },
   { en: "Ruwaydah", ar: "الرويضة" },
   { en: "Ajdar_Milan_Airport", ar: "مطار أجدار ميلان" }
