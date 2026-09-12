@@ -3,7 +3,6 @@
 // Static Arabic layout lives in per-page background images; dynamic Latin values
 // are swapped in-place inside the text layer (same approach as mscTemplate).
 import { esc, replaceTDivs, centered } from "./mscTemplate.ts";
-import { placeNameAr } from "./placeNamesAr.ts";
 
 export const SAUD_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/b2ff5412b_AHMED86842.html";
@@ -59,8 +58,8 @@ export function buildFromSaudTemplate(templateHtml, trip) {
   const t = trip || {};
   const date = fmtDateSlash(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc(placeNameAr(t.route_from));
-  const to = esc(placeNameAr(t.route_to));
+  const from = esc((t.route_from || "").toUpperCase());
+  const to = esc((t.route_to || "").toUpperCase());
   const d1 = (t.drivers || [])[0] || {};
   const passengers = t.passengers || [];
 

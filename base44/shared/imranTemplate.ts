@@ -4,7 +4,6 @@
 // BAKED IN and never overridden — only date, destination, second party and passenger
 // data are dynamic.
 import { esc } from "./mscTemplate.ts";
-import { placeNameAr } from "./placeNamesAr.ts";
 
 export const IMRAN_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/3e5aabc72_IMRAN.html";
@@ -102,8 +101,8 @@ export function buildFromImranTemplate(templateHtml, trip) {
   const passengers = t.passengers || [];
   const date = fmtDateDDMMYYYY(t.travel_date);
   const time = esc((t.trip_time || "").toUpperCase());
-  const from = esc(placeNameAr(t.route_from));
-  const to = esc(placeNameAr(t.route_to));
+  const from = esc((t.route_from || "").toUpperCase());
+  const to = esc((t.route_to || "").toUpperCase());
   const route = from && to ? `${from} TO ${to}` : "";
   const leader = esc((passengers[0] || {}).name || "");
   const secondParty = leader

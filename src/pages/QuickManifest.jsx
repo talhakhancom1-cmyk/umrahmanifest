@@ -16,8 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import PhotoUploader from "@/components/trips/PhotoUploader";
 import PassengerTable from "@/components/trips/PassengerTable";
 import WardaExtraFields from "@/components/quick/WardaExtraFields";
-import PlaceSelect from "@/components/quick/PlaceSelect";
-import { saudiDate, saudiTime } from "@/lib/saudiTime";
+import WardaRouteSelect from "@/components/quick/WardaRouteSelect";
 
 const isWarda = (company) => /warda/i.test(company?.name || "");
 
@@ -30,31 +29,16 @@ export default function QuickManifest() {
   const [driverId, setDriverId] = useState("");
   const [routeFrom, setRouteFrom] = useState("Madina");
   const [routeTo, setRouteTo] = useState("Makkah");
-  const [travelDate, setTravelDate] = useState(saudiDate());
-  const [tripTime, setTripTime] = useState(saudiTime());
+  const [travelDate, setTravelDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [tripTime, setTripTime] = useState("");
   const [passengers, setPassengers] = useState([]);
   const [photoUrls, setPhotoUrls] = useState([]);
   const [creating, setCreating] = useState(false);
   const [warda, setWarda] = useState({ driverPhone: "", tripNumber: "", notes: "" });
 
   const selectedCompany = companies.find((c) => c.id === companyId);
-
-  // Keep Saudi (UTC+3) date & time live until the operator edits them
-  const dtEdited = React.useRef(false);
-  useEffect(() => {
-    const stamp = () => {
-      if (dtEdited.current) return;
-      setTravelDate(saudiDate());
-      setTripTime(saudiTime());
-    };
-    stamp();
-    window.addEventListener("focus", stamp);
-    const id = setInterval(stamp, 30000);
-    return () => {
-      window.removeEventListener("focus", stamp);
-      clearInterval(id);
-    };
-  }, []);
 
   useEffect(() => {
     const d = drivers.find((x) => x.id === driverId);
@@ -210,21 +194,34 @@ export default function QuickManifest() {
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label>Route From</Label>
-            <PlaceSelect value={routeFrom} onChange={setRouteFrom} />
+            {isWarda(selectedCompany) ? (
+              <WardaRouteSelect value={routeFrom} onChange={setRouteFrom} />
+            ) : (
+              <Input
+                list="quick-route-options"
+                value={routeFrom}
+                onChange={(e) => setRouteFrom(e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Route To</Label>
-            <PlaceSelect value={routeTo} onChange={setRouteTo} />
+            {isWarda(selectedCompany) ? (
+              <WardaRouteSelect value={routeTo} onChange={setRouteTo} />
+            ) : (
+              <Input
+                list="quick-route-options"
+                value={routeTo}
+                onChange={(e) => setRouteTo(e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Travel Date</Label>
             <Input
               type="date"
               value={travelDate}
-              onChange={(e) => {
-                dtEdited.current = true;
-                setTravelDate(e.target.value);
-              }}
+              onChange={(e) => setTravelDate(e.target.value)}
             />
           </div>
           <div className="space-y-1.5">
@@ -232,12 +229,26 @@ export default function QuickManifest() {
             <Input
               placeholder="e.g. 7:05 PM"
               value={tripTime}
-              onChange={(e) => {
-                dtEdited.current = true;
-                setTripTime(e.target.value);
-              }}
+              onChange={(e) => setTripTime(e.target.value)}
             />
           </div>
+          <datalist id="quick-route-options">
+            <option value="Madina" />
+            <option value="Makkah" />
+            <option value="Riyadh" />
+            <option value="Dammam" />
+            <option value="Jeddah" />
+            <option value="Zalim" />
+            <option value="Tayab" />
+            <option value="Al_Qasim" />
+            <option value="Ramazia" />
+            <option value="Al_Hanakiyyah" />
+            <option value="Al_Humiyat" />
+            <option value="Riswan" />
+            <option value="Ajdar_Milan_Airport" />
+            <option value="Ruwaydah" />
+            <option value="Buraidah" />
+          </datalist>
         </section>
 
         {isWarda(selectedCompany) && (

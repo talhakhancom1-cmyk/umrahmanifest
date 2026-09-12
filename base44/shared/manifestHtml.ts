@@ -83,8 +83,8 @@ function stampHtml(t, style) {
 
 function contractPage(t) {
   const date = fmtDate(t.travel_date);
-  const from = esc(placeNameAr(t.route_from));
-  const to = esc(placeNameAr(t.route_to));
+  const from = esc((t.route_from || "").toUpperCase());
+  const to = esc((t.route_to || "").toUpperCase());
   const secondParty = esc(t.second_party_name || "");
   const qr = esc(t.qr_url || "https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=MURJAN-AL-SHARQIYA-CR2055010235");
   return `
@@ -133,7 +133,7 @@ function contractPage(t) {
 
 function manifestPage(t) {
   const date = fmtDate(t.travel_date);
-  const dest = `${esc(placeNameAr(t.route_from))} - ${esc(placeNameAr(t.route_to))}`;
+  const dest = `${esc((t.route_from || "").toUpperCase())} TO ${esc((t.route_to || "").toUpperCase())}`;
   const drivers = t.drivers || [];
   const passengers = t.passengers || [];
   const driverNames = drivers.map((d) => esc(d.name)).filter(Boolean).join("<br/>");
@@ -304,8 +304,6 @@ function inspectionPage(t) {
     ${footerHtml(t)}
   </div>`;
 }
-
-import { placeNameAr } from "./placeNamesAr.ts";
 
 export function buildManifestHtml(trip) {
   const t = trip || {};

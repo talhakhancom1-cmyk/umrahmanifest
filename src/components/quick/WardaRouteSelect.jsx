@@ -8,9 +8,9 @@ import {
 } from "@/components/ui/select";
 import { PLACES } from "@/lib/places";
 
-// Place picker used for every company: the menu shows English + Arabic so the
-// place is easy to spot; Arabic-only templates print the Arabic name.
-export default function PlaceSelect({ value, onChange }) {
+// Place picker for the Warda company: menu shows English + Arabic so the
+// place is easy to spot; the manifest itself prints only the Arabic name.
+export default function WardaRouteSelect({ value, onChange }) {
   const current = PLACES.find((p) => p.en === value);
   return (
     <Select value={value} onValueChange={onChange}>

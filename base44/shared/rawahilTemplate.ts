@@ -5,7 +5,6 @@
 // Dynamic fields are swapped in-place by their pdf2htmlEX class strings; the
 // baked Arabic layout, borders, stamps and watermark are preserved.
 import { esc } from "./mscTemplate.ts";
-import { placeNameAr } from "./placeNamesAr.ts";
 
 export const RAWAHIL_TEMPLATE_URL =
   "https://media.base44.com/files/public/6a5cef68337f5303ffc014f5/91ca74d3f_6928LSASHIRKARAWAHILALBAIT.html";
@@ -136,8 +135,8 @@ export function buildFromRawahilTemplate(templateHtml, trip) {
   const drivers = t.drivers || [];
   const date = fmtDate(t.travel_date);
   const time = esc(t.trip_time || "");
-  const from = esc(placeNameAr(t.route_from));
-  const to = esc(placeNameAr(t.route_to));
+  const from = esc((t.route_from || "").replace(/_/g, " ").toUpperCase());
+  const to = esc((t.route_to || "").replace(/_/g, " ").toUpperCase());
   const driverName = esc((drivers[0] || {}).name || "");
   const driverIqama = esc((drivers[0] || {}).iqama_no || "");
   const plate = esc(t.vehicle_plate || "");

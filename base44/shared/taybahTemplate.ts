@@ -6,7 +6,6 @@
 //   p3 = inspection log (driver name, plate, date, signature)
 // The baked Arabic layout, branding and watermark are preserved.
 import { esc } from "./mscTemplate.ts";
-import { placeNameAr } from "./placeNamesAr.ts";
 
 export const TAYBAH_TEMPLATE_URL =
   "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/493fa7704_template-1786817164344.txt";
@@ -131,8 +130,8 @@ export function buildFromTaybahTemplate(templateHtml: string, trip: any): string
   const d2 = drivers[1] || {};
   const date = fmtDate(t.travel_date);
   const secondParty = esc(t.second_party_name || "");
-  const from = esc(placeNameAr(t.route_from));
-  const to = esc(placeNameAr(t.route_to));
+  const from = esc(t.route_from || "");
+  const to = esc(t.route_to || "");
   let html = templateHtml;
 
   // ---- Page 1: contract (second party blanked when unset so no stale sample) ----
