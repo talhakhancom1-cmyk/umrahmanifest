@@ -53,6 +53,14 @@ const PAGES = [
 ];
 export const SHAM_MAX_ROWS = 47;
 
+// Company's own drivers — used when a trip has no driver set
+const DEFAULT_DRIVERS = [
+  { name: "SHER ALI KHAN ZARIN", iqama_no: "2519822569" },
+  { name: "MIAN GUL ZAHIR MUHAMMAD", iqama_no: "2216750873" }
+];
+const DEFAULT_PLATE = "\u0627 \u0631 \u0633 4467";
+const DEFAULT_CAR_MODEL = "\u062d\u0627\u0641\u0644\u0629 \u0643\u0628\u064a\u0631\u0629 \u0647\u0627\u064a\u0642\u0631";
+
 // ---- Page 5 (inspection log header row) ----
 const P5_ROW = { top: 254, height: 36 };
 const P5 = {
@@ -110,7 +118,7 @@ function inject(html: string, pageId: string, overlay: string): string {
 export function buildFromShamTemplate(templateHtml: string, trip: any): string {
   const t = trip || {};
   const passengers = t.passengers || [];
-  const drivers = t.drivers || [];
+  const drivers = (t.drivers || []).filter((d: any) => d && d.name).length ? t.drivers : DEFAULT_DRIVERS;
   const d1 = drivers[0] || {};
   const d2 = drivers[1] || {};
   const dateSlash = fmtSlash(t.travel_date);
@@ -122,8 +130,8 @@ export function buildFromShamTemplate(templateHtml: string, trip: any): string {
   const toAr = esc(placeNameAr(t.route_to));
   const driverNames = esc([d1.name, d2.name].filter(Boolean).join(" / "));
   const iqamas = esc([d1.iqama_no, d2.iqama_no].filter(Boolean).join(" / "));
-  const plate = esc(t.vehicle_plate || "");
-  const carModel = esc(t.car_model || "");
+  const plate = esc(t.vehicle_plate || DEFAULT_PLATE);
+  const carModel = esc(t.car_model || DEFAULT_CAR_MODEL);
   const secondParty = d1.name
     ? `${esc(d1.name)} WITH ${passengers.length} PASSENGERS`
     : esc(t.second_party_name || "");
