@@ -23,7 +23,7 @@ const SAMPLE_DATE_SLASH = "17/03/2026";
 const SAMPLE_DATE_SHORT = "17-Mar-26";
 
 // ---- Page 1 (contract, RTL): value cells left 238–842 ----
-const P1_CELL = { left: 242, width: 596 };
+const P1_CELL = { left: 54, width: 598 };
 const P1_SECOND_PARTY = { top: 406, height: 34 };
 const P1_FROM = { top: 545, height: 33 };
 const P1_TO = { top: 584, height: 33 };
@@ -47,9 +47,9 @@ const ROW_PITCH = 38.75;
 const ROW_H = 38;
 // First row top per page and how many rows that page holds
 const PAGES = [
-  { id: "pf2", firstTop: 518.25, rows: 18 },
-  { id: "pf3", firstTop: 290, rows: 23 },
-  { id: "pf4", firstTop: 290, rows: 6 }
+  { id: "pf2", firstTop: 505, rows: 18 },
+  { id: "pf3", firstTop: 277, rows: 23 },
+  { id: "pf4", firstTop: 277, rows: 6 }
 ];
 export const SHAM_MAX_ROWS = 47;
 
