@@ -99,6 +99,23 @@ function box(col: { left: number; width: number }, band: { top: number; height: 
     `font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${size}px;color:${INK};z-index:9">${s}</div>`;
 }
 
+// Two (or more) values stacked one above the other, centred in the cell band.
+function stack(col: { left: number; width: number }, band: { top: number; height: number }, lines: string[], size = 13): string {
+  const items = lines.filter(Boolean);
+  if (!items.length) return "";
+  const lineH = size * 1.15;
+  const total = lineH * items.length;
+  const bottom = PAGE_H - (band.top + band.height / 2 + total / 2);
+  const inner = items.map((s) => {
+    const est = s.length * size * 0.6;
+    const avail = col.width * 0.95;
+    const sx = est > avail ? (avail / est).toFixed(3) : "1";
+    return `<div style="white-space:nowrap;line-height:${lineH}px;transform:scaleX(${sx});transform-origin:center center">${s}</div>`;
+  }).join("");
+  return `<div style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};width:${pct(col.width, PAGE_W)};` +
+    `text-align:center;font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:${size}px;color:${INK};z-index:9">${inner}</div>`;
+}
+
 function cover(col: { left: number; width: number }, band: { top: number; height: number }): string {
   return `<div style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(PAGE_H - band.top - band.height, PAGE_H)};` +
     `width:${pct(col.width, PAGE_W)};height:${pct(band.height, PAGE_H)};background:#fff;z-index:8"></div>`;
@@ -128,8 +145,8 @@ export function buildFromShamTemplate(templateHtml: string, trip: any): string {
   const toEn = esc(String(t.route_to || "").replace(/_/g, " "));
   const fromAr = esc(placeNameAr(t.route_from));
   const toAr = esc(placeNameAr(t.route_to));
-  const driverNames = esc([d1.name, d2.name].filter(Boolean).join(" / "));
-  const iqamas = esc([d1.iqama_no, d2.iqama_no].filter(Boolean).join(" / "));
+  const driverLines = [d1.name, d2.name].filter(Boolean).map((n: string) => esc(n));
+  const iqamaLines = [d1.iqama_no, d2.iqama_no].filter(Boolean).map((n: string) => esc(n));
   const plate = esc(t.vehicle_plate || DEFAULT_PLATE);
   const carModel = esc(t.car_model || DEFAULT_CAR_MODEL);
   const secondParty = d1.name
@@ -161,8 +178,8 @@ export function buildFromShamTemplate(templateHtml: string, trip: any): string {
   let ov2 = cover(VEH.model, VEH_ROW) + cover(VEH.plate, VEH_ROW);
   ov2 += box(VEH.model, VEH_ROW, carModel, 14);
   ov2 += box(VEH.plate, VEH_ROW, plate, 14);
-  ov2 += box(VEH.driver, VEH_ROW, driverNames, 13);
-  ov2 += box(VEH.iqama, VEH_ROW, iqamas, 13);
+  ov2 += stack(VEH.driver, VEH_ROW, driverLines, 13);
+  ov2 += stack(VEH.iqama, VEH_ROW, iqamaLines, 13);
 
   // ---- Passenger rows across pages 2–4 ----
   const overlays: Record<string, string> = { pf2: ov2, pf3: "", pf4: "" };
