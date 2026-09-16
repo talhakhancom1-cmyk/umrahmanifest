@@ -58,7 +58,7 @@ const DEFAULT_DRIVERS = [
   { name: "SHER ALI KHAN ZARIN", iqama_no: "2519822569" },
   { name: "MIAN GUL ZAHIR MUHAMMAD", iqama_no: "2216750873" }
 ];
-const DEFAULT_PLATE = "\u0627 \u0631 \u0633 4467";
+const DEFAULT_PLATE = "SRA 4467";
 const DEFAULT_CAR_MODEL = "\u062d\u0627\u0641\u0644\u0629 \u0643\u0628\u064a\u0631\u0629 \u0647\u0627\u064a\u0642\u0631";
 
 // ---- Page 5 (inspection log header row) ----
