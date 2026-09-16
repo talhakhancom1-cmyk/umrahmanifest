@@ -59,7 +59,10 @@ const PLACES_AR = {
   damam: "الدمام",
   riyad: "الرياض",
   makah: "مكة المكرمة",
-  alhumyat: "الحميات"
+  alhumyat: "الحميات",
+  jubail: "الجبيل",
+  aljubail: "الجبيل",
+  jubayl: "الجبيل"
 };
 
 export function placeNameAr(name) {
