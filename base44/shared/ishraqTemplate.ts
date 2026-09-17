@@ -95,7 +95,7 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
 
   p2 = replaceTDivs(p2, [
     routeReplacer,
-    (s) => s === SAMPLE_DATE ? dateTime : null,
+    (s) => s === SAMPLE_DATE ? "" : null,
     (s) => s === SAMPLE_P2_FOOTER_DATE ? dateTimeNum : null,
     (s) => PAX_SAMPLES.indexOf(s) >= 0 ? "" : null
   ]);
@@ -118,15 +118,15 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
     name: { left: 466, width: 382 }
   };
   const IQAMA_CELL = { left: 41, width: 243, bottom: 987, size: 15 };
-  const mkCell = (col, bottom, text, size) =>
+  const mkCell = (col, bottom, text, size, color) =>
     `<div class="b44-cell" style="position:absolute;left:${pct(col.left, PAGE_W)};bottom:${pct(bottom, PAGE_H)};` +
     `width:${pct(col.width, PAGE_W)};text-align:center;font-family:Arial,Helvetica,sans-serif;` +
-    `font-weight:700;font-size:${size || 13}px;color:#000;z-index:9">${text}</div>`;
+    `font-weight:700;font-size:${size || 13}px;color:${color || "#000"};z-index:9">${text}</div>`;
 
   let overlay = "";
   // Driver iqama — the template's own iqama cell is blank; fill it with the
   // trip's driver iqama, falling back to the template's baked driver.
-  overlay += mkCell(IQAMA_CELL, IQAMA_CELL.bottom, esc(d1.iqama_no || SAMPLE_IQAMA), IQAMA_CELL.size);
+  overlay += mkCell(IQAMA_CELL, IQAMA_CELL.bottom, esc(d1.iqama_no || SAMPLE_IQAMA), IQAMA_CELL.size, "#fff");
   for (let i = 0; i < passengers.length && i < 14; i++) {
     const b = ROW_BOTTOM[i + 1];
     if (b === undefined) break;
