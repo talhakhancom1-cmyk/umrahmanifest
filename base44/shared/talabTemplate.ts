@@ -23,10 +23,15 @@ const ROW_TIMES = "y13";   // Start Time:         | End Time:
 // Passenger table: 10 rows, y-class per row (row numbers already printed)
 const PAX_ROW_Y = ["y5", "y6", "y7", "y8", "y9", "ya", "yb", "yc", "yd", "ye"];
 // Row 11 is not printed on the template: drawn below row 10 (same pitch, 31.41pt),
-// in the blank band above the QR block. Geometry measured from the page image (pt).
+// in the blank band above the QR block. Geometry measured in pt on the 794x1123pt
+// page, then emitted as % of the page so screen (px) and print (pt) agree.
+const PG_W = 794;
+const PG_H = 1123;
+const px = (v: number) => (v / PG_W * 100).toFixed(4) + "%";
+const py = (v: number) => (v / PG_H * 100).toFixed(4) + "%";
 const ROW11_TEXT_BOTTOM = 223.257;
 const ROW11_BOX = { left: 76.67, bottom: 214.0, width: 641.33, height: 31.33 };
-const ROW11_VLINES = [76.67, 124.0, 450.67, 559.33, 636.67, 716.67]; // column borders (left pt)
+const ROW11_VLINES = [76.67, 124.0, 278.2, 450.67, 559.33, 636.67, 716.67]; // column borders (left pt)
 const ROW_NO_X = "x5"; // "No" column x-class used by the printed "10"
 // Passenger column x-classes (taken from the column headers)
 const PAX_COL = {
@@ -43,12 +48,22 @@ const SAMPLE_SECOND_PARTY = "Umar";
 
 // Arabic contract page: the route lines are blank in the template, so we place
 // the values just left of each label (RTL page, coordinates from the template).
-const AR_FROM = { left: 700, bottom: 800.4 };  // النقل من :
-const AR_TO = { left: 700, bottom: 764.4 };    // وصولاً إلى :
+// (pt on the 794x1123pt page)
+const AR_FROM = { left: 622.2, bottom: 711.5 };  // النقل من :
+const AR_TO = { left: 622.2, bottom: 679.5 };    // وصولاً إلى :
+const AR_DATE = { right: 740, bottom: 913.2, charW: 6.6 }; // التاريخ: (date grows leftward)
+
+// White boxes (pt) over the sample date / second party baked into the page image
+const AR_DATE_COVER = { left: 660, bottom: 905, width: 82, height: 20 };
+const AR_PARTY_COVER = { left: 631, bottom: 758, width: 44, height: 20 };
+
+function arCover(b: { left: number; bottom: number; width: number; height: number }): string {
+  return `<div style="position:absolute;left:${px(b.left)};bottom:${py(b.bottom)};width:${px(b.width)};height:${py(b.height)};background:#fff"></div>`;
+}
 
 function arCell(pos: { left: number; bottom: number }, value: string): string {
   if (!value) return "";
-  return `<div class="t m0 ha ff2 fs1 fc1 sc0 ls0 ws0" style="left:${pos.left}px;bottom:${pos.bottom}px"><span dir="ltr">${value}</span></div>`;
+  return `<div class="t m0 ha ff2 fs1 fc1 sc0 ls0 ws0" style="left:${px(pos.left)};bottom:${py(pos.bottom)}"><span dir="ltr">${value}</span></div>`;
 }
 
 // A positioned value div using the template's own font + geometry classes.
@@ -62,16 +77,16 @@ function cell(x: string, y: string, value: string, fits = 0): string {
 function cellAt(x: string, bottomPt: number, value: string, fits = 0): string {
   if (value === "" || value == null) return "";
   const inner = fits ? fit(value, fits) : value;
-  return `<div class="t m0 ${x} h4 ff1 fs1 fc1 sc0 ls0 ws0" style="bottom:${bottomPt}pt">${inner}</div>`;
+  return `<div class="t m0 ${x} h4 ff1 fs1 fc1 sc0 ls0 ws0" style="bottom:${py(bottomPt)}">${inner}</div>`;
 }
 
 // Table borders for the extra row, matching the baked table's line weight/colour.
 function row11Borders(): string {
   const b = ROW11_BOX;
-  const line = "1.33pt solid #333";
-  let html = `<div style="position:absolute;left:${b.left}pt;bottom:${b.bottom}pt;width:${b.width}pt;height:${b.height}pt;border-bottom:${line}"></div>`;
+  const line = "1.5px solid #333";
+  let html = `<div style="position:absolute;left:${px(b.left)};bottom:${py(b.bottom)};width:${px(b.width)};height:${py(b.height)};border-bottom:${line}"></div>`;
   for (const x of ROW11_VLINES) {
-    html += `<div style="position:absolute;left:${x}pt;bottom:${b.bottom}pt;width:0;height:${b.height}pt;border-left:${line}"></div>`;
+    html += `<div style="position:absolute;left:${px(x)};bottom:${py(b.bottom)};width:0;height:${py(b.height)};border-left:${line}"></div>`;
   }
   return html;
 }
@@ -115,10 +130,14 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
 
   // ---- Arabic contract page ----
   const dateLine = dateAr ? (t.trip_time ? `${dateAr} - ${esc(t.trip_time)}` : dateAr) : SAMPLE_DATE_AR;
-  html = html.split(SAMPLE_DATE_AR).join(dateLine);
-  html = html.split(SAMPLE_SECOND_PARTY).join(secondParty || " ");
+  // The sample date / second party are baked into the page image with a
+  // transparent text layer: make the text visible and cover the baked values.
+  html = html.replace(`<span class="fc4 sc0">${SAMPLE_DATE_AR}</span>`, "");
+  html = html.replace(`<span class="fc4 sc0">${SAMPLE_SECOND_PARTY}</span>`,
+    `<span class="fc1 sc0">${secondParty || ""}</span>`);
+  const dateCell = arCell({ left: AR_DATE.right - dateLine.length * AR_DATE.charW, bottom: AR_DATE.bottom }, dateLine);
 
-  const arCells = arCell(AR_FROM, routeFrom) + arCell(AR_TO, routeTo);
+  const arCells = arCover(AR_DATE_COVER) + arCover(AR_PARTY_COVER) + dateCell + arCell(AR_FROM, routeFrom) + arCell(AR_TO, routeTo);
   const p2Idx = html.indexOf('<div id="pf2"');
   if (p2Idx >= 0 && arCells) {
     const before = html.slice(0, p2Idx);
@@ -181,7 +200,7 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
 </style>`;
   html = html.replace("</head>", extraCss + "\n</head>");
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
-  html = html.replace("<body>", "<body><!--b44-talab-v3-->");
+  html = html.replace("<body>", "<body><!--b44-talab-v4-->");
 
   return html;
 }
