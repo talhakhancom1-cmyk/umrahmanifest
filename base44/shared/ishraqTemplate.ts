@@ -86,6 +86,13 @@ export function buildFromIshraqTemplate(templateHtml, trip) {
   const PAX_SAMPLES = [
     ...SAMPLE_NAMES, ...SAMPLE_IDS, ...NAT_SAMPLES, "PAKISTANSABIR"
   ];
+  // Vehicle row: driver name / plate / car model are baked as plain text.
+  const squeeze = (s, fits) => s.length <= fits ? s
+    : `<span style="display:inline-block;white-space:nowrap;transform:scaleX(${(fits / s.length).toFixed(3)});transform-origin:left center">${s}</span>`;
+  if (d1.name) p2 = p2.split(`>${SAMPLE_DRIVER} </div>`).join(`>${squeeze(esc(d1.name.toUpperCase()), 18)} </div>`);
+  if (t.vehicle_plate) p2 = p2.split(`>RAR <span class="ls9">5716</span> </div>`).join(`>${squeeze(esc(t.vehicle_plate.toUpperCase()), 12)} </div>`);
+  if (t.car_model) p2 = p2.split(`>TOY0TA HI ACE </span></div>`).join(`>${squeeze(esc(t.car_model.toUpperCase()), 16)} </span></div>`);
+
   p2 = replaceTDivs(p2, [
     routeReplacer,
     (s) => s === SAMPLE_DATE ? dateTime : null,
