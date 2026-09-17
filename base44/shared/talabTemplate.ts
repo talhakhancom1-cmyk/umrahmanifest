@@ -51,7 +51,8 @@ const SAMPLE_SECOND_PARTY = "Umar";
 // (pt on the 794x1123pt page)
 const AR_FROM = { left: 622.2, bottom: 711.5 };  // النقل من :
 const AR_TO = { left: 622.2, bottom: 679.5 };    // وصولاً إلى :
-const AR_DATE = { right: 740, bottom: 913.2, charW: 6.6 }; // التاريخ: (date grows leftward)
+const AR_DATE = { right: 728, bottom: 913.2, charW: 6.6 };
+const AR_PARTY = { right: 666, bottom: 765.1, charW: 6.6 }; // الطرف الثاني السيد: (grows leftward) // التاريخ: (date grows leftward)
 
 // White boxes (pt) over the sample date / second party baked into the page image
 const AR_DATE_COVER = { left: 660, bottom: 905, width: 82, height: 20 };
@@ -133,11 +134,11 @@ export function buildFromTalabTemplate(templateHtml: string, trip: any): string 
   // The sample date / second party are baked into the page image with a
   // transparent text layer: make the text visible and cover the baked values.
   html = html.replace(`<span class="fc4 sc0">${SAMPLE_DATE_AR}</span>`, "");
-  html = html.replace(`<span class="fc4 sc0">${SAMPLE_SECOND_PARTY}</span>`,
-    `<span class="fc1 sc0">${secondParty || ""}</span>`);
+  html = html.replace(`<span class="fc4 sc0">${SAMPLE_SECOND_PARTY}</span>`, "");
   const dateCell = arCell({ left: AR_DATE.right - dateLine.length * AR_DATE.charW, bottom: AR_DATE.bottom }, dateLine);
+  const partyCell = arCell({ left: AR_PARTY.right - secondParty.length * AR_PARTY.charW, bottom: AR_PARTY.bottom }, secondParty);
 
-  const arCells = arCover(AR_DATE_COVER) + arCover(AR_PARTY_COVER) + dateCell + arCell(AR_FROM, routeFrom) + arCell(AR_TO, routeTo);
+  const arCells = arCover(AR_DATE_COVER) + arCover(AR_PARTY_COVER) + dateCell + partyCell + arCell(AR_FROM, routeFrom) + arCell(AR_TO, routeTo);
   const p2Idx = html.indexOf('<div id="pf2"');
   if (p2Idx >= 0 && arCells) {
     const before = html.slice(0, p2Idx);
