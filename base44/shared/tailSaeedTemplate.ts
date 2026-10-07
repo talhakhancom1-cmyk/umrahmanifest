@@ -50,10 +50,12 @@ export function buildFromTailSaeedTemplate(templateHtml, trip) {
   const to = esc((t.route_to || "").toUpperCase());
   const route = from && to ? `${from} TO ${to}` : "";
   const passengers = t.passengers || [];
-  const leader = esc((passengers[0] || {}).name || "");
-  const secondParty = leader
-    ? `${leader} / WITH ${Math.max(passengers.length - 1, 0)} MEMBER${passengers.length > 2 ? "S" : ""}`
-    : esc(t.second_party_name || "");
+  // Second party = the trip's lead passenger (first in the list), not a fixed name
+  const leaderName = String((passengers[0] || {}).name || "").trim().toUpperCase();
+  const memberCount = Math.max(passengers.length - 1, 0);
+  const secondParty = leaderName
+    ? `${leaderName} / WITH ${String(memberCount).padStart(2, "0")} MEMBER${memberCount === 1 ? "" : "S"}`
+    : "";
 
   // Split into head + pages
   const parts = templateHtml.split(/(<div id="pf[123]")/);
@@ -64,10 +66,8 @@ export function buildFromTailSaeedTemplate(templateHtml, trip) {
   // ---- Page 1: date, second party, route from/to ----
   p1 = replaceTDivs(p1, [
     (s) => s === SAMPLE_DATE ? date : null,
-    // Keep "SHAHID" as the second party, but make the member count dynamic
-    (s) => s === SAMPLE_SECOND_PARTY
-      ? centered(`SHAHID / WITH ${String(Math.max(passengers.length - 1, 0)).padStart(2, "0")} MEMBER${passengers.length - 1 === 1 ? "" : "S"}`)
-      : null,
+    // Second party: dynamic lead passenger + member count; no passengers = keep sample
+    (s) => s === SAMPLE_SECOND_PARTY && secondParty ? centered(secondParty) : null,
     (s) => s === SAMPLE_FROM ? centered(from) : null,
     (s) => s === SAMPLE_TO ? centered(to) : null,
   ]);
