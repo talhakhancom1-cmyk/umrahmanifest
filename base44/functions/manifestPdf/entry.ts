@@ -3,7 +3,7 @@ import { buildManifestDoc } from '../../shared/manifestBuilder.ts';
 import { buildPdfFromMscHtml, diagnoseFonts } from '../../shared/mscPdf.ts';
 
 // Direct PDF download: GET ?trip_id=<id>
-// (v5: Taybah template field injection — passenger/date/second-party wiring)
+// (v6: Hayat Crystal template field injection)
 // The trip id acts as an unguessable access token (used in Telegram links).
 Deno.serve(async (req) => {
   try {

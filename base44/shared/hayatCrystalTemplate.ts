@@ -33,7 +33,7 @@ function fillCell(html: string, cx: string, cy: string, value: string, font = ""
   const re = new RegExp(`(<div class="c ${cx} ${cy} [^"]*">)<div class="t ([^"]*)">[\\s\\S]*?</div>`);
   return html.replace(re, (_m, open, cls) => {
     const y = (cls.match(/\by[0-9a-f]+\b/) || [""])[0];
-    const c = font ? `t m0 ${y} ${font}` : cls.replace(/\bx[0-9a-f]+\b/, "");
+    const c = font ? `t m0 ${y} ${font}` : "t " + cls.replace(/\bx[0-9a-f]+\b/, "");
     return `${open}<div class="${c}" style="left:0;width:100%;text-align:center">${value}</div>`;
   });
 }
