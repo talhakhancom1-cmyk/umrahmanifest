@@ -33,8 +33,9 @@ function fillCell(html: string, cx: string, cy: string, value: string, font = ""
   const re = new RegExp(`(<div class="c ${cx} ${cy} [^"]*">)<div class="t ([^"]*)">[\\s\\S]*?</div>`);
   return html.replace(re, (_m, open, cls) => {
     const y = (cls.match(/\by[0-9a-f]+\b/) || [""])[0];
-    const c = font ? `t m0 ${y} ${font}` : "t " + cls.replace(/\bx[0-9a-f]+\b/, "");
-    return `${open}<div class="${c}" style="left:0;width:100%;text-align:center">${value}</div>`;
+    // m0 scales text by 0.375, so 266.667% width = the full cell width on screen
+    const c = font ? `t m0 ${y} ${font}` : "t " + cls.replace(/\bx[0-9a-f]+\b/, "").replace(/\bm[0-9a-f]+\b/, "m0");
+    return `${open}<div class="${c}" style="left:0;width:266.667%;text-align:center">${value}</div>`;
   });
 }
 
@@ -63,7 +64,7 @@ export function buildFromHayatCrystalTemplate(templateHtml: string, trip: any): 
   if (driver) p2 = fillCell(p2, "x80", "y50", squeeze(driver, 18));
   if (date) {
     p2 = fillCell(p2, "x116", "y54", `<span dir="ltr">${date}</span>`);
-    p2 = fillCell(p2, "x116", "y76", `<span dir="ltr">${date}${time ? " " + time : ""}</span>`);
+    p2 = fillCell(p2, "x116", "y76", `<span dir="ltr">${squeeze(`${date}${time ? " " + time : ""}`, 14)}</span>`);
   }
   if (from || to) p2 = fillCell(p2, "x116", "y7a", `${from} TO ${to}`);
 
