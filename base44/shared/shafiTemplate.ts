@@ -69,7 +69,7 @@ export function buildFromShafiTemplate(templateHtml: string, trip: any): string 
 
   // ---- Page 1: driver row (fixed), trip details, passengers ----
   p1 = p1.replace(/<div class="t ([^"]+)">JAMAL KHAN<\/div>/, (_m, cls) =>
-    `<div class="t ${cls.replace(/\bfs\w+/, "fsb44")}" style="${CENTER}">${a(DRIVER)}</div>`);
+    `<div class="t ${cls.replace(/\bfs\w+/, "fsb44").replace(/\by\w+/, "yb44")}" style="${CENTER}">${a(DRIVER)}</div>`);
   p1 = swap(p1, "563865510", "");
   p1 = p1.split("2602072775").join("2577872621").split("EXA-3297").join("EXA-3302");
   p1 = swap(p1, "03/11/2026", a(dl(date)));
@@ -111,8 +111,9 @@ export function buildFromShafiTemplate(templateHtml: string, trip: any): string 
 .loading-indicator{display:none!important}
 .t{overflow:visible!important}
 .fsb44{font-size:32px}
+.yb44{bottom:4px}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}.fsb44{font-size:28.44pt}}
+@media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}.fsb44{font-size:28.44pt}.yb44{bottom:3.56pt}}
 </style>`;
   head = head.replace("</head>", css + "\n</head>").replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
   return head + p1 + p2 + p3;
