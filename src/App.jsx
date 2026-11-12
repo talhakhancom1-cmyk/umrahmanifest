@@ -18,6 +18,7 @@ import BuildPlan from '@/pages/BuildPlan';
 import TripWorkspace from '@/pages/TripWorkspace';
 import TripDocument from '@/pages/TripDocument';
 import Settings from '@/pages/Settings';
+import TplPreview from '@/pages/TplPreview';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
       <Route path="/trips/:id" element={<TripWorkspace />} />
       <Route path="/trips/:id/document" element={<TripDocument />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/tpl-preview" element={<TplPreview />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
