@@ -1,6 +1,7 @@
-// Almusafir Almuatamad (المسافر المعتمد) — contract template, pdf2htmlEX layout.
-// All visible text lives in the template's own text layer, so each device value
-// is swapped by dropping the sample run and drawing our value in its place.
+// Almusafir Almuatamad (المسافر المعتمد) — 3-page contract template (pdf2htmlEX).
+//   pf1 = contract: trip values, driver block, guest row, second party
+//   pf2 = passenger list table (7 rows/page, repeated for longer groups)
+//   pf3 = contract terms (untouched)
 // Driver details fall back to the baked-in ones when the trip has no driver.
 import { esc } from "./mscTemplate.ts";
 
@@ -11,12 +12,15 @@ const BAKED_DRIVER = {
   name: "MUHAMMAD SHAFI NABI GUL",
   iqama: "2577872621",
   phone: "",
-  plate: "EXA-3302"
+  plate: "3302 EXA"
 };
 
-// sample name glyphs inside the "الطرف الثاني" body run (Mina Gula)
+// sample name inside the "الطرف الثاني" run of the contract body (Mina Gula)
 const SAMPLE_NAME_GLYPHS =
   "\ueba1\uec35\uec4b\uebda\ue603\ueb8a\uec8a\uec41\uebda";
+
+const TABLE_TOP = 975;   // table body starts below the header row
+const TABLE_BOTTOM = 685; // and ends above the footer
 
 function cssVal(html: string, kind: string, name: string) {
   const i = html.indexOf("." + kind + name + "{");
@@ -31,25 +35,15 @@ function classTok(cls: string, kind: string) {
   return m ? m[1] : "";
 }
 
-// Draws our value in place of a removed sample run.
-function overlay(left: number, bottom: number, html: string, size = 18, width = 130) {
-  return `<div class="b44-cell" style="position:absolute;left:${left}px;bottom:${bottom}px;width:${width}px;` +
-    `text-align:center;font-size:${size}px;line-height:1;white-space:nowrap;` +
-    `font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#000;z-index:9">${html}</div>`;
-}
+type Run = { start: number; bodyStart: number; bodyEnd: number; end: number; x: number; y: number };
 
-function overlayRight(left: number, bottom: number, html: string, size = 17, width = 130) {
-  return overlay(left, bottom, html, size, width).replace("text-align:center", "text-align:right");
-}
-
-// Removes the sample runs listed in `targets` ("left:bottom" -> replacement html)
-function patch(page: string, tpl: string, targets: Record<string, string>) {
-  let out = "";
+// Locates every absolutely positioned text run of a page.
+function scanRuns(page: string, tpl: string): Run[] {
+  const runs: Run[] = [];
   let i = 0;
   while (true) {
     const p = page.indexOf('<div class="t ', i);
-    if (p < 0) { out += page.slice(i); break; }
-    out += page.slice(i, p);
+    if (p < 0) break;
     const gt = page.indexOf(">", p);
     const cls = page.slice(p + 14, gt);
     let depth = 1, j = gt + 1;
@@ -59,18 +53,93 @@ function patch(page: string, tpl: string, targets: Record<string, string>) {
       if (b < 0) { j = page.length; break; }
       if (a >= 0 && a < b) { depth++; j = a + 5; } else { depth--; j = b + 6; }
     }
-    const l = cssVal(tpl, "x", classTok(cls, "x"));
-    const b2 = cssVal(tpl, "y", classTok(cls, "y"));
-    const key = l != null && b2 != null ? Math.round(l) + ":" + Math.round(b2) : "";
-    if (key && targets[key] != null) {
+    const bodyEnd = page.lastIndexOf("</div>", j - 1);
+    runs.push({
+      start: p,
+      bodyStart: gt + 1,
+      bodyEnd,
+      end: j,
+      x: cssVal(tpl, "x", classTok(cls, "x")) ?? -1,
+      y: cssVal(tpl, "y", classTok(cls, "y")) ?? -1
+    });
+    i = j;
+  }
+  return runs;
+}
+
+function fit(text: string, chars: number) {
+  if (text.length <= chars) return text;
+  const k = Math.max(0.55, chars / text.length);
+  return `<span style="display:inline-block;white-space:nowrap;transform:scaleX(${k.toFixed(3)});transform-origin:right center">${text}</span>`;
+}
+
+function cell(right: number, bottom: number, html: string, size: number, width: number) {
+  return `<div class="b44-cell" style="position:absolute;left:${right - width}px;bottom:${bottom}px;` +
+    `width:${width}px;text-align:right;font-size:${size}px;line-height:1;white-space:nowrap;` +
+    `font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#000;z-index:9">${html}</div>`;
+}
+
+// Generic value drawn where a sample run used to be.
+function overlay(left: number, bottom: number, html: string, size = 18, width = 130, align = "center") {
+  return `<div class="b44-cell" style="position:absolute;left:${left}px;bottom:${bottom}px;width:${width}px;` +
+    `text-align:${align};font-size:${size}px;line-height:1;white-space:nowrap;` +
+    `font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#000;z-index:9">${html}</div>`;
+}
+
+// Removes the sample runs listed in `targets` ("left:bottom" -> replacement html)
+function patch(page: string, tpl: string, targets: Record<string, string>) {
+  let out = "";
+  let i = 0;
+  for (const r of scanRuns(page, tpl)) {
+    out += page.slice(i, r.start);
+    const key = Math.round(r.x) + ":" + Math.round(r.y);
+    if (targets[key] != null) {
       if (targets[key]) out += targets[key];
       delete targets[key];
     } else {
-      out += page.slice(p, j);
+      out += page.slice(r.start, r.end);
     }
-    i = j;
+    i = r.end;
   }
-  return out;
+  return out + page.slice(i);
+}
+
+// Groups the table body lines of the passenger page into row baselines.
+function tableRows(page: string, tpl: string) {
+  const ys = scanRuns(page, tpl)
+    .filter((r) => r.y < TABLE_TOP && r.y > TABLE_BOTTOM)
+    .map((r) => r.y)
+    .sort((a, b) => b - a);
+  const rows: number[] = [];
+  for (const y of ys) if (!rows.length || rows[rows.length - 1] - y > 8) rows.push(y);
+  return rows;
+}
+
+// Rebuilds the passenger page: sample rows removed, our passengers drawn in.
+function fillListPage(page: string, tpl: string, pax: any[], startIndex = 0) {
+  const rows = tableRows(page, tpl);
+  // drop every sample run inside the table body
+  let out = "";
+  let i = 0;
+  for (const r of scanRuns(page, tpl)) {
+    out += page.slice(i, r.start);
+    if (!(r.y < TABLE_TOP && r.y > TABLE_BOTTOM)) out += page.slice(r.start, r.end);
+    i = r.end;
+  }
+  page = out + page.slice(i);
+
+  const offset = startIndex || 0;
+  let grid = "";
+  rows.forEach((y, idx) => {
+    const p = pax[idx];
+    if (!p) return;
+    grid += cell(833, y, String(offset + idx + 1), 13, 40);
+    grid += cell(700, y, fit(esc(String(p.name || "").toUpperCase()), 26), 15, 220);
+    grid += cell(412, y, fit(esc(String(p.nationality || "").toUpperCase()), 11), 13, 110);
+    grid += cell(356, y, fit(esc(String(p.id_number || "")), 12), 12, 100);
+  });
+  if (!grid) return page;
+  return page.replace(/(<div class="pc[^"]*">)/, `$1<div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9">${grid}</div>`);
 }
 
 export function buildFromMusafirTemplate(templateHtml: string, trip: any): string {
@@ -90,25 +159,23 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   const iqama = esc(String(drv.iqama_no || BAKED_DRIVER.iqama));
   const phone = esc(String(drv.phone || BAKED_DRIVER.phone));
   const plate = esc(String(t.vehicle_plate || drv.vehicle_plate || BAKED_DRIVER.plate).toUpperCase());
-  const leader = pax[0] || {};
-  const leaderName = esc(String(leader.name || "").trim().toUpperCase());
+  const leaderName = esc(String(((t.passengers || [])[0] || {}).name || "").trim().toUpperCase());
   const paxCount = pax.length ? String(pax.length) : "";
 
   const html = templateHtml.replace(/<script[\s\S]*?<\/script>/g, "");
   const parts = html.split(/(<div id="pf[123]")/);
   let head = parts[0];
   let p1 = (parts[1] || "") + (parts[2] || "");
-  let p2 = (parts[3] || "") + (parts[4] || "");
+  const p2raw = (parts[3] || "") + (parts[4] || "");
+  const p3 = (parts[5] || "") + (parts[6] || "");
 
+  // ---- page 1: trip values ----
   const targets: Record<string, string> = {};
-
-  // ---- trip values ----
   if (from) targets["488:953"] = overlay(488, 953, from, 18, 130);
   if (to) targets["298:954"] = overlay(298, 954, to, 18, 130);
   if (iso) targets["57:976"] = overlay(57, 976, iso, 17, 120);
   if (time) targets["78:943"] = overlay(78, 943, time, 17, 120);
 
-  // ---- driver block ----
   if (driverName) {
     targets["727:839"] = overlay(650, 838, driverName, 15, 210);
     targets["677:839"] = "";
@@ -118,20 +185,27 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   if (phone) targets["709:718"] = overlay(709, 718, phone, 17, 140);
   if (plate) targets["706:656"] = overlay(706, 656, plate, 16, 150);
 
-  // ---- guest row (one merged sample run covers all cells) ----
-  const row =
+  const guestRow =
     (leaderName ? overlay(370, 647, leaderName, 17, 170) : "") +
     (paxCount ? overlay(30, 647, paxCount, 17, 110) : "");
-  if (row) targets["419:647"] = row;
-
+  if (guestRow) targets["419:647"] = guestRow;
   p1 = patch(p1, html, targets);
-  if (p2) p2 = patch(p2, html, {});
 
-  // ---- second party inside the contract body ----
+  // ---- page 1: second party in the contract body ----
   if (leaderName) {
     p1 = p1.replace(SAMPLE_NAME_GLYPHS, "");
-    const nameCell = overlayRight(575, 391, leaderName, 17, 135);
-    p1 = p1.replace(/(<div class="pc[^"]*">)/, `$1${nameCell}`);
+    p1 = p1.replace(/(<div class="pc[^"]*">)/,
+      `$1${overlay(575, 391, leaderName, 17, 135, "right")}`);
+  }
+
+  // ---- page 2: passenger list, one page per 7 passengers ----
+  const perPage = p2raw ? tableRows(p2raw, html).length : 7;
+  const pages: string[] = [];
+  const chunks = Math.max(1, Math.ceil(pax.length / perPage));
+  for (let c = 0; c < chunks; c++) {
+    let page = fillListPage(p2raw, html, pax.slice(c * perPage, (c + 1) * perPage), c * perPage);
+    if (c > 0) page = page.replace(/id="pf2"/, `id="pf2_${c}"`);
+    pages.push(page);
   }
 
   const css = `
@@ -145,5 +219,5 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   head = head
     .replace("</head>", css + "\n</head>")
     .replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
-  return head + p1 + p2;
+  return head + p1 + pages.join("") + p3;
 }
