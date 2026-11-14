@@ -11,9 +11,17 @@ export const MUSAFIR_TEMPLATE_URL =
 const BAKED_DRIVER = {
   name: "SHARIF ULLAH QASIM KHAN",
   iqama: "2603123759",
-  phone: "",
+  phone: "0541401021",
   plate: "3380 XSA"
 };
+
+// the template prints its digits as private-use glyphs (0 = U+E67B … 9 = U+E684)
+const SAMPLE_ISSUE_DATE = "13/11/2026";
+function glyphs(s: string) {
+  return [...s].map((c) => (c === "/" ? "\uec81" : String.fromCharCode(0xe67b + Number(c)))).join("");
+}
+const same = (a: any, b: any) =>
+  String(a || "").replace(/\s+/g, "").toUpperCase() === String(b || "").replace(/\s+/g, "").toUpperCase();
 
 // sample name inside the "الطرف الثاني" run of the contract body (Mina Gula)
 const SAMPLE_NAME_GLYPHS =
@@ -169,12 +177,38 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   const leaderName = esc(String(((t.passengers || [])[0] || {}).name || "").trim().toUpperCase());
   const paxCount = pax.length ? String(pax.length) : "";
 
-  const html = templateHtml.replace(/<script[\s\S]*?<\/script>/g, "");
+  // the template's own driver (name / plate printed in Arabic) stays as-is
+  // unless the trip carries a different one
+  const customName = !!drv.name && !same(drv.name, BAKED_DRIVER.name);
+  const customPlate = !same(plate, BAKED_DRIVER.plate);
+  const issue = iso ? `${pd(dt.getDate())}/${pd(dt.getMonth() + 1)}/${dt.getFullYear()}` : "";
+
+  let html = templateHtml.replace(/<script[\s\S]*?<\/script>/g, "");
+  // issue date in the header of every page
+  if (issue) html = html.split(glyphs(SAMPLE_ISSUE_DATE)).join(glyphs(issue));
   const parts = html.split(/(<div id="pf[123]")/);
   let head = parts[0];
   let p1 = (parts[1] || "") + (parts[2] || "");
   const p2raw = (parts[3] || "") + (parts[4] || "");
-  const p3 = (parts[5] || "") + (parts[6] || "");
+  let p3 = (parts[5] || "") + (parts[6] || "");
+
+  // ---- page 3: inspection record (plate, driver, date & time) ----
+  const t3: Record<string, string> = {};
+  let grid3 = "";
+  if (issue) {
+    t3["332:995"] = "";
+    grid3 += overlay(211, 995, `<span dir="ltr">${issue}${time ? " - " + time : ""}</span>`, 15, 350);
+  }
+  if (customPlate) {
+    t3["332:1058"] = ""; t3["439:1058"] = ""; t3["435:1058"] = "";
+    grid3 += overlay(211, 1058, plate, 15, 350);
+  }
+  if (customName) {
+    t3["353:1026"] = ""; t3["303:1026"] = ""; t3["359:1024"] = "";
+    grid3 += overlay(211, 1026, driverName, 15, 350);
+  }
+  p3 = patch(p3, html, t3).replace(/(<div class="pc[^"]*">)/,
+    `$1<div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9">${grid3}</div>`);
 
   // ---- page 1: trip values ----
   const targets: Record<string, string> = {};
@@ -183,14 +217,18 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   if (iso) targets["57:976"] = overlay(57, 976, iso, 17, 120);
   if (time) targets["78:943"] = overlay(78, 943, time, 17, 120);
 
-  if (driverName) {
+  if (customName) {
     targets["727:839"] = overlay(650, 838, driverName, 15, 210);
     targets["677:839"] = "";
-    targets["733:839"] = "";
+    targets["733:837"] = "";
   }
   if (iqama) targets["709:781"] = overlay(709, 781, iqama, 17, 140);
   if (phone) targets["709:718"] = overlay(709, 718, phone, 17, 140);
-  if (plate) targets["706:656"] = overlay(706, 656, plate, 16, 150);
+  if (customPlate) {
+    targets["706:656"] = overlay(685, 656, plate, 16, 150);
+    targets["812:656"] = "";
+    targets["809:656"] = "";
+  }
 
   const guestRow =
     (leaderName ? overlay(370, 647, leaderName, 17, 170) : "") +
@@ -202,12 +240,12 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   if (leaderName) {
     p1 = p1.replace(SAMPLE_NAME_GLYPHS, "");
     p1 = p1.replace(/(<div class="pc[^"]*">)/,
-      `$1${overlay(575, 391, leaderName, 17, 135, "right")}`);
+      `$1${overlay(400, 391, leaderName, 17, 250, "right")}`);
   }
 
   // ---- page 1: driver photo in the empty frame of the driver column ----
   p1 = p1.replace(/(<div class="pc[^"]*">)/,
-    `$1<img class="bi" style="position:absolute;left:700px;bottom:876px;width:112px;height:150px;` +
+    `$1<img class="bi" style="position:absolute;left:706px;bottom:888px;width:108px;height:143px;` +
     `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
 
   // ---- page 2: passenger list, one page per table (6 rows) ----
