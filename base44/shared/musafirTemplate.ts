@@ -23,8 +23,17 @@ const SAMPLE_NAME_GLYPHS =
 const DRIVER_PHOTO_URL =
   "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/dd4288a0b_musafir_driver.jpg";
 
-const TABLE_TOP = 975;   // table body starts below the header row
+const TABLE_TOP = 945;   // first body row baseline sits below the grey header band
 const TABLE_BOTTOM = 685; // and ends above the footer
+
+// Column centres read off the template's own header labels:
+//   #  ≈ 820 · guest name ≈ 590 · nationality ≈ 360 · id/passport ≈ 166
+const COL = {
+  serial: { left: 790, width: 60 },
+  name: { left: 430, width: 320 },
+  nationality: { left: 290, width: 140 },
+  id: { left: 66, width: 200 }
+};
 
 function cssVal(html: string, kind: string, name: string) {
   const i = html.indexOf("." + kind + name + "{");
@@ -75,12 +84,6 @@ function fit(text: string, chars: number) {
   if (text.length <= chars) return text;
   const k = Math.max(0.55, chars / text.length);
   return `<span style="display:inline-block;white-space:nowrap;transform:scaleX(${k.toFixed(3)});transform-origin:right center">${text}</span>`;
-}
-
-function cell(right: number, bottom: number, html: string, size: number, width: number) {
-  return `<div class="b44-cell" style="position:absolute;left:${right - width}px;bottom:${bottom}px;` +
-    `width:${width}px;text-align:right;font-size:${size}px;line-height:1;white-space:nowrap;` +
-    `font-family:Arial,Helvetica,sans-serif;font-weight:700;color:#000;z-index:9">${html}</div>`;
 }
 
 // Generic value drawn where a sample run used to be.
@@ -137,10 +140,10 @@ function fillListPage(page: string, tpl: string, pax: any[], startIndex = 0) {
   rows.forEach((y, idx) => {
     const p = pax[idx];
     if (!p) return;
-    grid += cell(833, y, String(offset + idx + 1), 13, 40);
-    grid += cell(700, y, fit(esc(String(p.name || "").toUpperCase()), 26), 15, 220);
-    grid += cell(412, y, fit(esc(String(p.nationality || "").toUpperCase()), 11), 13, 110);
-    grid += cell(356, y, fit(esc(String(p.id_number || "")), 12), 12, 100);
+    grid += overlay(COL.serial.left, y, String(offset + idx + 1), 13, COL.serial.width);
+    grid += overlay(COL.name.left, y, fit(esc(String(p.name || "").toUpperCase()), 30), 15, COL.name.width);
+    grid += overlay(COL.nationality.left, y, fit(esc(String(p.nationality || "").toUpperCase()), 13), 13, COL.nationality.width);
+    grid += overlay(COL.id.left, y, fit(esc(String(p.id_number || "")), 13), 13, COL.id.width);
   });
   if (!grid) return page;
   return page.replace(/(<div class="pc[^"]*">)/, `$1<div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9">${grid}</div>`);
@@ -207,8 +210,8 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
     `$1<img class="bi" style="position:absolute;left:700px;bottom:876px;width:112px;height:150px;` +
     `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
 
-  // ---- page 2: passenger list, one page per 7 passengers ----
-  const perPage = p2raw ? tableRows(p2raw, html).length : 7;
+  // ---- page 2: passenger list, one page per table (6 rows) ----
+  const perPage = p2raw ? tableRows(p2raw, html).length : 6;
   const pages: string[] = [];
   const chunks = Math.max(1, Math.ceil(pax.length / perPage));
   for (let c = 0; c < chunks; c++) {
