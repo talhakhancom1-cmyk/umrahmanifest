@@ -447,6 +447,32 @@ export async function buildPdfFromMscHtml(html) {
       });
     }
 
+    // 1b) photos referenced by URL (driver photo) with inline geometry
+    const urlImgRe = /<img\b[^>]*src="(https?:\/\/[^"]+)"[^>]*>/g;
+    let um;
+    while ((um = urlImgRe.exec(pageHtml))) {
+      const style = (um[0].match(/style="([^"]*)"/) || [])[1] || "";
+      const num = (k) => {
+        const hit = new RegExp(k + ":\\s*(-?[\\d.]+)px").exec(style);
+        return hit ? parseFloat(hit[1]) : null;
+      };
+      try {
+        const res = await fetch(um[1]);
+        if (!res.ok) continue;
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        const isPng = /\.png(\?|$)/i.test(um[1]);
+        const img = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+        page.drawImage(img, {
+          x: num("left") ?? 0,
+          y: num("bottom") ?? 0,
+          width: num("width") ?? img.width,
+          height: num("height") ?? img.height
+        });
+      } catch (e) {
+        console.error("url image failed:", e.message);
+      }
+    }
+
     // 2) text layer — walk divs keeping a stack so `t` divs inside `c` clip
     // containers are positioned relative to their container box
     const re = /<div\b[^>]*>|<\/div>/g;

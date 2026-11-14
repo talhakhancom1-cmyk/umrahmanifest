@@ -19,6 +19,10 @@ const BAKED_DRIVER = {
 const SAMPLE_NAME_GLYPHS =
   "\ueba1\uec35\uec4b\uebda\ue603\ueb8a\uec8a\uec41\uebda";
 
+// driver photo printed in the empty frame of the driver column (page 1)
+const DRIVER_PHOTO_URL =
+  "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/dd4288a0b_musafir_driver.jpg";
+
 const TABLE_TOP = 975;   // table body starts below the header row
 const TABLE_BOTTOM = 685; // and ends above the footer
 
@@ -197,6 +201,11 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
     p1 = p1.replace(/(<div class="pc[^"]*">)/,
       `$1${overlay(575, 391, leaderName, 17, 135, "right")}`);
   }
+
+  // ---- page 1: driver photo in the empty frame of the driver column ----
+  p1 = p1.replace(/(<div class="pc[^"]*">)/,
+    `$1<img class="bi" style="position:absolute;left:700px;bottom:876px;width:112px;height:150px;` +
+    `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
 
   // ---- page 2: passenger list, one page per 7 passengers ----
   const perPage = p2raw ? tableRows(p2raw, html).length : 7;
