@@ -203,9 +203,7 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   const pages: string[] = [];
   const chunks = Math.max(1, Math.ceil(pax.length / perPage));
   for (let c = 0; c < chunks; c++) {
-    let page = fillListPage(p2raw, html, pax.slice(c * perPage, (c + 1) * perPage), c * perPage);
-    if (c > 0) page = page.replace(/id="pf2"/, `id="pf2_${c}"`);
-    pages.push(page);
+    pages.push(fillListPage(p2raw, html, pax.slice(c * perPage, (c + 1) * perPage), c * perPage));
   }
 
   const css = `
