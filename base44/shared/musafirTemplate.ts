@@ -9,10 +9,10 @@ export const MUSAFIR_TEMPLATE_URL =
   "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/00fbad5d3_newco_raw.html";
 
 const BAKED_DRIVER = {
-  name: "MUHAMMAD SHAFI NABI GUL",
-  iqama: "2577872621",
+  name: "SHARIF ULLAH QASIM KHAN",
+  iqama: "2603123759",
   phone: "",
-  plate: "3302 EXA"
+  plate: "3380 XSA"
 };
 
 // sample name inside the "الطرف الثاني" run of the contract body (Mina Gula)
