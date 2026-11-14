@@ -31,7 +31,7 @@ const SAMPLE_NAME_GLYPHS =
 const DRIVER_PHOTO_URL =
   "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/dd4288a0b_musafir_driver.jpg";
 
-const TABLE_TOP = 945;   // first body row baseline sits below the grey header band
+const TABLE_TOP = 975;   // between the header labels (988) and the first body row (957)
 const TABLE_BOTTOM = 685; // and ends above the footer
 
 // Column centres read off the template's own header labels:
@@ -248,8 +248,8 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
     `$1<img class="bi" style="position:absolute;left:706px;bottom:888px;width:108px;height:143px;` +
     `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
 
-  // ---- page 2: passenger list, one page per table (6 rows) ----
-  const perPage = p2raw ? tableRows(p2raw, html).length : 6;
+  // ---- page 2: passenger list, one page per table (7 rows) ----
+  const perPage = p2raw ? tableRows(p2raw, html).length : 7;
   const pages: string[] = [];
   const chunks = Math.max(1, Math.ceil(pax.length / perPage));
   for (let c = 0; c < chunks; c++) {
