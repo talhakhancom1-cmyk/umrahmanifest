@@ -197,7 +197,7 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   let grid3 = "";
   if (issue) {
     t3["332:995"] = "";
-    grid3 += overlay(211, 995, `<span dir="ltr">${issue}${time ? " - " + time : ""}</span>`, 15, 350);
+    grid3 += overlay(211, 991, `<span dir="ltr">${issue}${time ? " - " + time : ""}</span>`, 15, 350);
   }
   if (customPlate) {
     t3["332:1058"] = ""; t3["439:1058"] = ""; t3["435:1058"] = "";
@@ -245,7 +245,7 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
 
   // ---- page 1: driver photo in the empty frame of the driver column ----
   p1 = p1.replace(/(<div class="pc[^"]*">)/,
-    `$1<img class="bi" style="position:absolute;left:706px;bottom:888px;width:108px;height:143px;` +
+    `$1<img class="bi b44-photo" style="position:absolute;left:706px;bottom:888px;width:108px;height:143px;` +
     `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
 
   // ---- page 2: passenger list, one page per table (7 rows) ----
@@ -262,7 +262,9 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}}
+@media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}
+/* the template switches to pt sizes in print (1px -> 0.8889pt); scale our overlays the same way */
+.b44-cell,.b44-photo{zoom:1.185185}}
 </style>`;
   head = head
     .replace("</head>", css + "\n</head>")

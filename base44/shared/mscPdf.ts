@@ -512,7 +512,8 @@ export async function buildPdfFromMscHtml(html) {
           .replace(/&amp;/g, "&")
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">");
-        const hasPua = /[\uE000-\uF8FF]/.test(rawText) || /[\u{F0000}-\u{FFFFD}]/u.test(rawText);
+        // tick marks (✓) are drawn from the template's own font, like PUA glyphs
+        const hasPua = /[\uE000-\uF8FF\u2713]/.test(rawText) || /[\u{F0000}-\u{FFFFD}]/u.test(rawText);
         let text, entry = null;
         if (hasPua) {
           text = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");

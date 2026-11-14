@@ -9,7 +9,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const url = new URL(req.url);
-    const tripId = url.searchParams.get('trip_id');
+    let tripId = url.searchParams.get('trip_id');
+    if (!tripId && req.method === 'POST') {
+      try { tripId = (await req.json()).trip_id; } catch { /* no body */ }
+    }
     if (!tripId || !/^[a-f0-9]{24}$/.test(tripId)) {
       return new Response('Invalid trip id', { status: 400 });
     }
