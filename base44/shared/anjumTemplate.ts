@@ -37,9 +37,11 @@ const ROWS = [["y27", "y28"], ["y29", "y2a"], ["y2b", "y28"], ["y2c", "y2d"], ["
 const COLS = { x1d: ["nationality", 17], x1c: ["id_number", 18], x20: ["name", 24] };
 
 // value drawn on the contract page, ending just before its Arabic label
+// (a long value shrinks and grows to the left, away from the label)
 const over = (edge, bottom, s, align = "right") =>
   `<div class="b44-cell" style="position:absolute;left:${align === "right" ? edge - 320 : edge}px;bottom:${bottom}px;width:320px;` +
-  `text-align:${align};font-size:17px;line-height:1;white-space:nowrap;${ARIAL};color:#000;z-index:9">${esc(s)}</div>`;
+  `display:flex;justify-content:${align === "right" ? "flex-end" : "flex-start"};` +
+  `text-align:${align};font-size:${s.length > 34 ? Math.max(11, Math.floor((17 * 34) / s.length)) : 17}px;line-height:1;white-space:nowrap;${ARIAL};color:#000;z-index:9">${esc(s)}</div>`;
 
 export function buildFromAnjumTemplate(templateHtml, trip) {
   const t = trip || {};
@@ -105,7 +107,7 @@ export function buildFromAnjumTemplate(templateHtml, trip) {
 #sidebar{display:none!important}
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
-.b44h{visibility:hidden}
+.b44h,.b44h *{visibility:hidden!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
 @media print{@page{size:A4;margin:0}
 /* the template switches to pt sizes in print (1px -> 0.8889pt); scale our overlays the same way */
