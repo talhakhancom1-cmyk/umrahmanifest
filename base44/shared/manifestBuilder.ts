@@ -22,6 +22,7 @@ import { buildFromTailSaeed22Template, TAIL_SAEED_22_TEMPLATE_URL } from "./tail
 import { buildFromShafiTemplate, SHAFI_TEMPLATE_URL } from "./shafiTemplate.ts";
 import { buildFromMusafirTemplate, MUSAFIR_TEMPLATE_URL } from "./musafirTemplate.ts";
 import { buildFromAmanahTemplate, AMANAH_TEMPLATE_URL } from "./amanahTemplate.ts";
+import { buildFromAnjumTemplate, ANJUM_TEMPLATE_URL } from "./anjumTemplate.ts";
 
 const BUILDERS = {
   [MSC_TEMPLATE_URL]: buildFromMscTemplate,
@@ -45,7 +46,8 @@ const BUILDERS = {
   [TAIL_SAEED_22_TEMPLATE_URL]: buildFromTailSaeed22Template,
   [SHAFI_TEMPLATE_URL]: buildFromShafiTemplate,
   [MUSAFIR_TEMPLATE_URL]: buildFromMusafirTemplate,
-  [AMANAH_TEMPLATE_URL]: buildFromAmanahTemplate
+  [AMANAH_TEMPLATE_URL]: buildFromAmanahTemplate,
+  [ANJUM_TEMPLATE_URL]: buildFromAnjumTemplate
 };
 
 // Alias old non-http template identifiers to their real fetched URLs
