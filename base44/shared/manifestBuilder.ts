@@ -23,6 +23,7 @@ import { buildFromShafiTemplate, SHAFI_TEMPLATE_URL } from "./shafiTemplate.ts";
 import { buildFromMusafirTemplate, MUSAFIR_TEMPLATE_URL } from "./musafirTemplate.ts";
 import { buildFromAmanahTemplate, AMANAH_TEMPLATE_URL } from "./amanahTemplate.ts";
 import { buildFromAnjumTemplate, ANJUM_TEMPLATE_URL } from "./anjumTemplate.ts";
+import { buildFromIsmailTemplate, ISMAIL_TEMPLATE_URL } from "./ismailTemplate.ts";
 
 const BUILDERS = {
   [MSC_TEMPLATE_URL]: buildFromMscTemplate,
@@ -47,7 +48,8 @@ const BUILDERS = {
   [SHAFI_TEMPLATE_URL]: buildFromShafiTemplate,
   [MUSAFIR_TEMPLATE_URL]: buildFromMusafirTemplate,
   [AMANAH_TEMPLATE_URL]: buildFromAmanahTemplate,
-  [ANJUM_TEMPLATE_URL]: buildFromAnjumTemplate
+  [ANJUM_TEMPLATE_URL]: buildFromAnjumTemplate,
+  [ISMAIL_TEMPLATE_URL]: buildFromIsmailTemplate
 };
 
 // Alias old non-http template identifiers to their real fetched URLs
