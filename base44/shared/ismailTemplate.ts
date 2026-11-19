@@ -35,6 +35,33 @@ function setCells(page, cells) {
 const ROWS = ["y5d", "y60", "y62", "y63", "y64", "y65", "y66", "y67", "y68", "y6a", "y6b", "y6c"];
 const COLS = { x55: ["nationality", 12], x70: ["id_number", 12], x16: ["name", 22] };
 
+// Separate each route value from the native Arabic run. Its negative spacers
+// were calculated for MAKKAH/RIZWAN and make longer replacements hit the label.
+function setContractRoute(page, template, xClass, spacer, value) {
+  if (!value) return page;
+  let field = "";
+  const run = new RegExp('(<div class="t [^"]*\\b' + xClass + '\\b[^"]*">)([\\s\\S]*?)(</div>)');
+  page = page.replace(run, (match, open, inner, close) => {
+    const cut = inner.indexOf(`<span class="_ ${spacer}"></span>`);
+    if (cut < 0) return match;
+    const label = inner.slice(0, cut);
+    const balance = (label.match(/<span\b/g) || []).length - (label.match(/<\/span>/g) || []).length;
+    const yClass = (open.match(/\by[0-9a-z]+\b/) || [])[0];
+    const bottom = Number((template.match(new RegExp('\\.' + yClass + '\\{bottom:([\\d.]+)px')) || [])[1]);
+    const height = Number((template.match(/\.h0\{height:([\d.]+)px/) || [])[1]);
+    if (!height || !Number.isFinite(bottom)) return match;
+    const size = Math.min(20, Math.max(10, 20 * 50 / value.length));
+    // Percentage geometry follows the template's own screen/print page sizes.
+    // Inline dimensions also give the direct PDF renderer the same field box.
+    field = `<div class="b44-cell b44-ismail-route" dir="ltr" style="position:absolute;` +
+      `left:${100 / 893.34 * 100}%;bottom:${bottom / height * 100}%;width:${640 / 893.34 * 100}%;` +
+      `text-align:right;font-size:${size}px;--route-size:${size * 8 / 9}pt;line-height:1;` +
+      `white-space:nowrap;direction:ltr;unicode-bidi:isolate;${ARIAL};color:#000;z-index:9">${esc(value)}</div>`;
+    return open + label + "</span>".repeat(balance) + close;
+  });
+  return field ? page.replace(/(<div class="pc[^"]*">)/, (open) => open + field) : page;
+}
+
 export function buildFromIsmailTemplate(templateHtml, trip) {
   const t = trip || {};
   const pax = t.passengers || [];
@@ -63,14 +90,8 @@ export function buildFromIsmailTemplate(templateHtml, trip) {
       '<span class="_ _5"></span>MEM<span class="_ _5"></span>BER<span class="_ _5"></span>S',
       () => val(party, 34));
   }
-  if (from) {
-    p1 = p1.replace('MA<span class="ls0">KKA<span class="_ _5"></span>H',
-      () => val(from, 18));
-  }
-  if (to) {
-    p1 = p1.replace('RI<span class="_ _5"></span>ZWA<span class="_ _5"></span>N',
-      () => val(to, 18));
-  }
+  p1 = setContractRoute(p1, html, "x31", "_23", from);
+  p1 = setContractRoute(p1, html, "x32", "_25", to);
 
   // ---- page 2: route, date, passengers (driver row stays as printed) ----
   const top = {};
@@ -105,7 +126,8 @@ export function buildFromIsmailTemplate(templateHtml, trip) {
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
-@media print{@page{size:A4;margin:0}}
+@media print{@page{size:A4;margin:0}
+.b44-ismail-route{font-size:var(--route-size)!important}}
 </style>`;
   head = head
     .replace("</head>", css + "\n</head>")
