@@ -87,12 +87,12 @@ export function buildFromLamarTemplate(templateHtml: string, trip: any): string 
     const rtl = (s: string) => `<span style="${b}" dir="rtl">${esc(s)}</span>`;
     const ltr = (s: string) => `<span style="${b}" dir="ltr">${esc(s)}</span>`;
     p2 = inject(clearCells(p2, "\\w+ y28"),
-      cell(628, 209, 289, 27, fit(rtl(own.name), 22), 20) +
+      cell(628, 209, 289, 27, `<span style="${b}" dir="rtl">${fit(esc(own.name), 22)}</span>`, 20) +
       cell(438, 186, 289, 27, ltr(String(drv.iqama_no).trim()), 22) +
       cell(242, 193, 289, 27, rtl(own.plate), 22) +
-      cell(56, 182, 289, 27, ltr(String(drv.phone || "").trim()), 22));
+      cell(56, 182, 289, 27, ltr(String(drv.phone || "").trim()), 20));
     p3 = inject(clearCells(p3, "(?:x40|x42) y50"),
-      cell(608, 228, 262, 22, rtl(own.name), 16) +
+      cell(608, 228, 262, 22, rtl(own.name), 18) +
       cell(406, 198, 262, 22, rtl(own.plate), 17));
   }
 
