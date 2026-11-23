@@ -3,7 +3,7 @@
 //   pf2 = manifest: 12 passenger rows (sample text removed, values overlaid)
 //   pf3 = inspection log: date + time
 // Driver details (عمران خان متزما خان, 2624610669, 9285 ا س ط, 0582704277)
-// are BAKED IN and never overridden.
+// are BAKED IN; they are only replaced for the drivers in LAMAR_DRIVERS.
 import { esc, replaceTDivs } from "./mscTemplate.ts";
 import { placeNameAr } from "./placeNamesAr.ts";
 
@@ -15,6 +15,16 @@ const pct = (v: number, r: number) => (v / r * 100).toFixed(4) + "%";
 const FONT = "font-family:Arial,Helvetica,sans-serif;color:#000;line-height:1;white-space:nowrap";
 const SAMPLES = ["MD GOLAM", "MOBARAK", "ABUL BADSHA", "MD JUNAYED", "MD SHAFIKUL", "RAKIB HASAN",
   "MD MOZAMMEL", "MD MOFAJIOL", "MAOHMED ASAD", "MD SHAHIN", "YASEN MIA", "RUBEL MIA", "BGD", "SA 5021"];
+
+// Extra Lamar drivers (keyed by iqama). When one is picked for the trip, the
+// baked driver row is cleared and replaced with these details.
+const LAMAR_DRIVERS: Record<string, { name: string; plate: string }> = {
+  "2311052233": { name: "محمد اعجاز انور محمد انور", plate: "7452 ا س ا" }
+};
+// empties the text of the template cells matching the given container classes
+function clearCells(page: string, classes: string): string {
+  return page.replace(new RegExp('(<div class="c ' + classes + ' [^"]*"><div class="t [^"]*">)[\\s\\S]*?(</div>)', "g"), "$1$2");
+}
 
 function fit(s: string, chars: number): string {
   if (s.length <= chars) return s;
@@ -69,6 +79,22 @@ export function buildFromLamarTemplate(templateHtml: string, trip: any): string 
   p3 = inject(p3,
     cell(34, 226, 264, 20, dl(time), 16, true) +
     cell(272, 126, 264, 20, dl(date), 16, true));
+
+  // ---- Other Lamar driver: replace the baked driver row (pages 2 + 3) ----
+  const drv = (t.drivers || [])[0] || {};
+  const own = LAMAR_DRIVERS[String(drv.iqama_no || "").trim()];
+  if (own) {
+    const rtl = (s: string) => `<span style="${b}" dir="rtl">${esc(s)}</span>`;
+    const ltr = (s: string) => `<span style="${b}" dir="ltr">${esc(s)}</span>`;
+    p2 = inject(clearCells(p2, "\\w+ y28"),
+      cell(628, 209, 289, 27, fit(rtl(own.name), 22), 20) +
+      cell(438, 186, 289, 27, ltr(String(drv.iqama_no).trim()), 22) +
+      cell(242, 193, 289, 27, rtl(own.plate), 22) +
+      cell(56, 182, 289, 27, ltr(String(drv.phone || "").trim()), 22));
+    p3 = inject(clearCells(p3, "(?:x40|x42) y50"),
+      cell(608, 228, 262, 22, rtl(own.name), 16) +
+      cell(406, 198, 262, 22, rtl(own.plate), 17));
+  }
 
   const css = `
 <style>
