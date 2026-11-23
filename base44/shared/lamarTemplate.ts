@@ -94,6 +94,12 @@ export function buildFromLamarTemplate(templateHtml: string, trip: any): string 
     p3 = inject(clearCells(p3, "(?:x40|x42) y50"),
       cell(608, 228, 262, 22, rtl(own.name), 18) +
       cell(406, 198, 262, 22, rtl(own.plate), 17));
+    // the baked QR opens the old driver's papers: cover it with one for this trip's PDF
+    if (t.id) {
+      const pdf = encodeURIComponent(`https://kasafpdf.base44.app/functions/manifestPdf?trip_id=${t.id}`);
+      p2 = inject(p2, `<img class="b44-qr" alt="" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=8&data=${pdf}&f=.png" ` +
+        `style="position:absolute;left:386px;bottom:52.4px;width:122px;height:122px;background:#fff;z-index:9">`);
+    }
   }
 
   const css = `
@@ -102,6 +108,7 @@ export function buildFromLamarTemplate(templateHtml: string, trip: any): string 
 #page-container{left:0!important}
 .loading-indicator{display:none!important}
 @media screen{.pc{display:block!important;opacity:1!important}}
+.b44-qr{left:43.226%!important;bottom:4.157%!important;width:13.662%!important;height:9.66%!important}
 @media print{@page{size:A4;margin:0}html,body{margin:0}.pf{page-break-after:always}}
 </style>`;
   head = head.replace("</head>", css + "\n</head>").replace("<title></title>", `<title>${esc(t.trip_name || "Trip Manifest")}</title>`);
