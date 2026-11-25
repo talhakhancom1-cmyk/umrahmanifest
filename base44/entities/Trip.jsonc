@@ -42,6 +42,9 @@
           },
           "phone": {
             "type": "string"
+          },
+          "nationality": {
+            "type": "string"
           }
         }
       }

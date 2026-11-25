@@ -23,6 +23,9 @@ const CENTER = "left:0;width:266.667%;text-align:center";
 const COLS = { nat: [31.7, 130], id: [162.4, 130], name: [292.4, 519.9] };
 const ROW_H = 24.84;
 const ROWS = Array.from({ length: 16 }, (_, i) => 634.2 - ROW_H * i);
+// Driver table (page px): [left, width] per column; bottom of the empty 2nd row
+const DRV = { plate: [31.7, 130], car: [162.4, 130], phone: [292.4, 130], id: [422.4, 130], nat: [552.4, 130], name: [682.4, 195] };
+const DRV_ROW2 = 706.8;
 const SAMPLE_PAX = ["DUTCH", "MN82HDF37", "NPL1PFC37", "NS6RLK359", "NWJ6D44R0", "NS1H4J1C9",
   "ZAKARIA", "AHMED", "HAMIDA", "MOUNIA", "TARIK"];
 
@@ -84,6 +87,17 @@ export function buildFromShafiTemplate(templateHtml: string, trip: any): string 
     cells += cell(COLS.id, ROWS[i], fit(esc(p.id_number || ""), 10));
     cells += cell(COLS.name, ROWS[i], fit(esc(String(p.name || "").toUpperCase()), 40));
   });
+  // second driver (same vehicle) goes in the empty row under the fixed driver
+  const d2 = (t.drivers || [])[1] || {};
+  if (String(d2.name || "").trim()) {
+    const up = (s: any) => esc(String(s || "").trim().toUpperCase());
+    cells += cell(DRV.name, DRV_ROW2, fit(up(d2.name), 17));
+    cells += cell(DRV.nat, DRV_ROW2, fit(up(d2.nationality), 11));
+    cells += cell(DRV.id, DRV_ROW2, fit(up(d2.iqama_no), 11));
+    cells += cell(DRV.phone, DRV_ROW2, fit(up(d2.phone), 11));
+    cells += cell(DRV.car, DRV_ROW2, fit("TOYOTA MICRO BUS", 11));
+    cells += cell(DRV.plate, DRV_ROW2, "EXA-3302");
+  }
   if (cells) {
     const grid = `<div style="position:absolute;left:0;top:0;width:100%;height:100%;z-index:9">${cells}</div>`;
     p1 = p1.replace(/(<div class="pc[^"]*">)/, `$1${grid}`);
