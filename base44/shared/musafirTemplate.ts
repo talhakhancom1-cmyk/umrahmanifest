@@ -170,16 +170,17 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   const from = place(t.route_from);
   const to = place(t.route_to);
   const time = esc(t.trip_time || "");
+  // the template's own driver (name / plate printed in Arabic) stays as-is
+  // unless the trip carries a different one
+  const customName = !!drv.name && !same(drv.name, BAKED_DRIVER.name);
   const driverName = esc(String(drv.name || BAKED_DRIVER.name).toUpperCase());
   const iqama = esc(String(drv.iqama_no || BAKED_DRIVER.iqama));
-  const phone = esc(String(drv.phone || BAKED_DRIVER.phone));
+  // a replaced driver must never inherit the baked driver's phone number
+  const phone = esc(String(drv.phone || (customName ? "" : BAKED_DRIVER.phone)));
   const plate = esc(String(t.vehicle_plate || drv.vehicle_plate || BAKED_DRIVER.plate).toUpperCase());
   const leaderName = esc(String(((t.passengers || [])[0] || {}).name || "").trim().toUpperCase());
   const paxCount = pax.length ? String(pax.length) : "";
 
-  // the template's own driver (name / plate printed in Arabic) stays as-is
-  // unless the trip carries a different one
-  const customName = !!drv.name && !same(drv.name, BAKED_DRIVER.name);
   const customPlate = !same(plate, BAKED_DRIVER.plate);
   const issue = iso ? `${pd(dt.getDate())}/${pd(dt.getMonth() + 1)}/${dt.getFullYear()}` : "";
 
@@ -224,6 +225,7 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   }
   if (iqama) targets["709:781"] = overlay(709, 781, iqama, 17, 140);
   if (phone) targets["709:718"] = overlay(709, 718, phone, 17, 140);
+  else if (customName) targets["709:718"] = "";
   if (customPlate) {
     targets["706:656"] = overlay(685, 656, plate, 16, 150);
     targets["812:656"] = "";
