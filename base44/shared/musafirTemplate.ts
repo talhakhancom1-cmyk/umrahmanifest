@@ -31,6 +31,11 @@ const SAMPLE_NAME_GLYPHS =
 const DRIVER_PHOTO_URL =
   "https://base44.app/api/apps/6a5cef68337f5303ffc014f5/files/mp/public/6a5cef68337f5303ffc014f5/dd4288a0b_musafir_driver.jpg";
 
+// Portraits cropped from each driver's own licence photo, keyed by iqama.
+const DRIVER_PHOTOS: Record<string, string> = {
+  "2588238317": "https://kasafpdf.base44.app/functions/driverPhoto"
+};
+
 const TABLE_TOP = 975;   // between the header labels (988) and the first body row (957)
 const TABLE_BOTTOM = 685; // and ends above the footer
 
@@ -248,7 +253,7 @@ export function buildFromMusafirTemplate(templateHtml: string, trip: any): strin
   // ---- page 1: driver photo in the empty frame of the driver column ----
   p1 = p1.replace(/(<div class="pc[^"]*">)/,
     `$1<img class="bi b44-photo" style="position:absolute;left:706px;bottom:888px;width:108px;height:143px;` +
-    `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTO_URL}">`);
+    `object-fit:cover;border:1px solid #000;z-index:9" src="${DRIVER_PHOTOS[String(drv.iqama_no || "").trim()] || DRIVER_PHOTO_URL}">`);
 
   // ---- page 2: passenger list, one page per table (7 rows) ----
   const perPage = p2raw ? tableRows(p2raw, html).length : 7;
